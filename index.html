@@ -58,7 +58,7 @@
           <input type="file" id="pdf-input" accept=".pdf" class="hidden" />
           <div class="text-4xl mb-2">📄</div>
           <span class="text-sm text-slate-100 font-medium block" id="file-label">Click to select PDF or drag & drop plan set</span>
-          <span class="text-xs text-slate-400 block mt-1">PDF plans up to 50MB</span>
+          <span class="text-xs text-slate-400 block mt-1">PDF plans up to 7MB</span>
         </label>
 
         <button id="scan-btn" onclick="runAudit()" class="w-full py-4 bg-brand-amber hover:bg-brand-hover text-brand-bg font-extrabold rounded-xl transition text-base shadow-lg cursor-pointer">
@@ -147,11 +147,17 @@
       const file = fileInput.files[0];
       if (!file) return alert('Please select a PDF drawing set first.');
 
+      // Size restriction check for Cloudflare Workers (7MB max PDF file)
+      const maxMb = 7;
+      if (file.size > maxMb * 1024 * 1024) {
+        return alert(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please select a PDF smaller than ${maxMb}MB.`);
+      }
+
       const btn = document.getElementById('scan-btn');
       const resultsDiv = document.getElementById('results');
       const summaryP = document.getElementById('audit-summary');
 
-      btn.innerText = 'Converting & Analyzing Drawing Set...';
+      btn.innerText = 'Analyzing Drawing Set with Gemini Vision AI...';
       btn.disabled = true;
 
       try {
@@ -165,15 +171,15 @@
 
         const data = await response.json();
 
-        if (data.success) {
+        if (response.ok && data.success) {
           cachedAuditData = data.audit;
           summaryP.innerText = data.audit.summary;
           resultsDiv.classList.remove('hidden');
         } else {
-          alert('Error: ' + (data.error || 'Could not parse PDF'));
+          alert('Audit Error: ' + (data.error || 'Could not analyze PDF file.'));
         }
       } catch (err) {
-        alert('Failed to connect to AI audit engine: ' + err.message);
+        alert('Network Connection Error: ' + err.message + '. Please test with a smaller PDF plan.');
       } finally {
         btn.innerText = 'Run Free Tender Audit →';
         btn.disabled = false;
