@@ -4,43 +4,80 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Conduit Co. | 60-Second AI Takeoffs</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#071A21',       /* Darkest Teal/Navy Background */
+              card: '#0D2B37',     /* Elevated Card Teal */
+              border: '#163E4D',   /* Muted Slate Border */
+              teal: '#128394',     /* Vibrant Conduit Teal */
+              amber: '#F0A219',    /* Conduit Golden-Orange */
+              hover: '#D98E11'     /* Slightly Darker Orange for Hover */
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
-  <nav class="border-b border-slate-800 p-4 max-w-6xl mx-auto flex justify-between items-center">
-    <div class="text-xl font-bold tracking-wider text-amber-400">CONDUIT CO.</div>
-    <span class="text-xs bg-slate-800 text-amber-400 px-3 py-1 rounded-full">🇦🇺 Built for Aussie Subbies</span>
+<body class="bg-brand-bg text-slate-100 font-sans min-h-screen">
+
+  <!-- Navigation Header -->
+  <nav class="border-b border-brand-border p-4 max-w-6xl mx-auto flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <img src="logo.png" alt="Conduit Co. Logo" class="w-10 h-10 rounded-xl shadow-md border border-brand-border" />
+      <span class="text-xl font-extrabold tracking-wider text-white">CONDUIT <span class="text-brand-amber">CO.</span></span>
+    </div>
+    <span class="text-xs bg-brand-card text-brand-amber px-3 py-1.5 rounded-full border border-brand-border font-medium">
+      🇦🇺 Built for Aussie Subbies
+    </span>
   </nav>
 
+  <!-- Hero Section -->
   <main class="max-w-4xl mx-auto px-4 pt-16 pb-24 text-center">
-    <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight">
+    <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">
       Stop Spending Sunday Nights Quoting.
     </h1>
-    <p class="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">
+    <p class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto font-normal">
       Conduit Co. turns complex PDF drawing sets into complete line-item material takeoffs in under 60 seconds.
     </p>
 
-    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 max-w-2xl mx-auto text-left shadow-2xl">
-      <h2 class="text-xl font-bold text-amber-400 mb-2 text-center">⚡ Free Instant Tender Trap Audit</h2>
-      <p class="text-xs text-slate-400 text-center mb-6">Drop your PDF drawings below. Our AI scans for missing symbols and scope traps instantly.</p>
+    <!-- Audit Widget Box -->
+    <div class="bg-brand-card p-8 rounded-2xl border border-brand-border max-w-2xl mx-auto text-left shadow-2xl">
+      <div class="flex items-center justify-center gap-3 mb-2">
+        <img src="logo.png" alt="Icon" class="w-6 h-6 rounded" />
+        <h2 class="text-xl font-bold text-brand-amber text-center">Free Instant Tender Trap Audit</h2>
+      </div>
+      <p class="text-xs text-slate-300 text-center mb-6">
+        Drop your PDF drawings below. Our AI scans for missing symbols and scope traps instantly.
+      </p>
 
       <div class="space-y-4">
-        <label class="block border-2 border-dashed border-slate-700 hover:border-amber-400 transition rounded-xl p-8 text-center cursor-pointer bg-slate-950/50">
+        <!-- Drag & Drop Area -->
+        <label class="block border-2 border-dashed border-brand-teal/50 hover:border-brand-amber transition rounded-xl p-8 text-center cursor-pointer bg-brand-bg/60">
           <input type="file" id="pdf-input" accept=".pdf" class="hidden" />
           <div class="text-4xl mb-2">📄</div>
-          <span class="text-sm text-slate-200 font-medium block" id="file-label">Click to select PDF or drag & drop plan set</span>
-          <span class="text-xs text-slate-500 block mt-1">PDF plans up to 100MB</span>
+          <span class="text-sm text-slate-100 font-medium block" id="file-label">Click to select PDF or drag & drop plan set</span>
+          <span class="text-xs text-slate-400 block mt-1">PDF plans up to 100MB</span>
         </label>
 
-        <button id="scan-btn" onclick="runAudit()" class="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition text-base">
+        <!-- Primary Action Button -->
+        <button id="scan-btn" onclick="runAudit()" class="w-full py-4 bg-brand-amber hover:bg-brand-hover text-brand-bg font-extrabold rounded-xl transition text-base shadow-lg cursor-pointer">
           Run Free Tender Audit →
         </button>
       </div>
 
       <!-- Results Box -->
-      <div id="results" class="hidden mt-6 p-4 bg-slate-950 rounded-lg border border-slate-800">
-        <h3 class="text-emerald-400 font-bold text-sm mb-2">✅ Audit Complete</h3>
-        <p id="audit-summary" class="text-xs text-slate-300 mb-4"></p>
+      <div id="results" class="hidden mt-6 p-5 bg-brand-bg rounded-xl border border-brand-border">
+        <h3 class="text-brand-teal font-bold text-sm mb-2 flex items-center gap-2">
+          <span>✅</span> Audit Complete
+        </h3>
+        <p id="audit-summary" class="text-xs text-slate-200 mb-4 leading-relaxed"></p>
         <div id="risk-list" class="space-y-2"></div>
       </div>
     </div>
@@ -85,8 +122,8 @@
 
           data.audit.topRisks.forEach(risk => {
             const card = document.createElement('div');
-            card.className = 'text-xs bg-slate-900 p-3 rounded border-l-2 border-amber-500 text-slate-300';
-            card.innerHTML = `<strong class="text-amber-400 block mb-1">${risk.title}</strong>${risk.description}`;
+            card.className = 'text-xs bg-brand-card p-3.5 rounded-lg border-l-4 border-brand-amber text-slate-200';
+            card.innerHTML = `<strong class="text-brand-amber block mb-1 text-xs uppercase tracking-wide">${risk.title}</strong>${risk.description}`;
             riskListDiv.appendChild(card);
           });
 
