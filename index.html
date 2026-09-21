@@ -1,123 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Conduit Co. | 60-Second AI Takeoffs</title>
-  <link rel="icon" type="image/png" href="logo.png" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              bg: '#071A21',
-              card: '#0D2B37',
-              border: '#163E4D',
-              teal: '#128394',
-              amber: '#F0A219',
-              hover: '#D98E11'
-            }
-          }
-        }
-      }
-    }
-  </script>
-</head>
-<body class="bg-brand-bg text-slate-100 font-sans min-h-screen">
-
-  <nav class="border-b border-brand-border p-4 max-w-6xl mx-auto flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <img src="logo.png" alt="Conduit Co. Logo" class="w-10 h-10 rounded-xl shadow-md border border-brand-border" />
-      <span class="text-xl font-extrabold tracking-wider text-white">CONDUIT <span class="text-brand-amber">CO.</span></span>
-    </div>
-    <span class="text-xs bg-brand-card text-brand-amber px-3 py-1.5 rounded-full border border-brand-border font-medium">
-      🇦🇺 Built for Aussie Subbies
-    </span>
-  </nav>
-
-  <main class="max-w-4xl mx-auto px-4 pt-16 pb-24 text-center">
-    <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-      Stop Spending Sunday Nights Quoting.
-    </h1>
-    <p class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto font-normal">
-      Conduit Co. turns complex PDF drawing sets into complete line-item material takeoffs in under 60 seconds.
-    </p>
-
-    <div class="bg-brand-card p-8 rounded-2xl border border-brand-border max-w-2xl mx-auto text-left shadow-2xl">
-      <div class="flex items-center justify-center gap-3 mb-2">
-        <h2 class="text-xl font-bold text-brand-amber text-center">⚡ Free Instant Tender Trap Audit</h2>
-      </div>
-      <p class="text-xs text-slate-300 text-center mb-6">
-        Drop your PDF drawings below. Our AI scans for missing symbols and scope traps instantly.
-      </p>
-
-      <div class="space-y-4">
-        <label class="block border-2 border-dashed border-brand-teal/50 hover:border-brand-amber transition rounded-xl p-8 text-center cursor-pointer bg-brand-bg/60">
-          <input type="file" id="pdf-input" accept=".pdf" class="hidden" />
-          <div class="text-4xl mb-2">📄</div>
-          <span class="text-sm text-slate-100 font-medium block" id="file-label">Click to select PDF or drag & drop plan set</span>
-          <span class="text-xs text-slate-400 block mt-1">PDF plans up to 50MB</span>
-        </label>
-
-        <button id="scan-btn" onclick="runAudit()" class="w-full py-4 bg-brand-amber hover:bg-brand-hover text-brand-bg font-extrabold rounded-xl transition text-base shadow-lg cursor-pointer">
-          Run Free Tender Audit →
-        </button>
-      </div>
-
-      <!-- Audit Results Box -->
-      <div id="results" class="hidden mt-6 p-5 bg-brand-bg rounded-xl border border-brand-border">
-        <h3 class="text-brand-teal font-bold text-sm mb-2 flex items-center gap-2">
-          <span>✅</span> AI Scope Summary
-        </h3>
-        <p id="audit-summary" class="text-xs text-slate-200 mb-4 leading-relaxed"></p>
-
-        <!-- Blurred Risk Section + Lead Form Gate -->
-        <div id="lead-gate" class="relative mt-4 border-t border-brand-border pt-4">
-          <div class="filter blur-sm select-none opacity-40 pointer-events-none space-y-2">
-            <div class="text-xs bg-brand-card p-3.5 rounded-lg border-l-4 border-brand-amber text-slate-200">
-              <strong class="text-brand-amber block mb-1 text-xs uppercase">HIGH RISK CLAUSE DETECTED</strong>
-              Core drilling through post-tensioned slab not specified in electrical scope.
-            </div>
-            <div class="text-xs bg-brand-card p-3.5 rounded-lg border-l-4 border-brand-amber text-slate-200">
-              <strong class="text-brand-amber block mb-1 text-xs uppercase">MISSING LEGEND SYMBOL</strong>
-              3-phase distribution board location ambiguous on Drawing E-02.
-            </div>
-          </div>
-
-          <!-- Overlay Form -->
-          <div class="absolute inset-0 flex flex-col items-center justify-center bg-brand-bg/95 p-4 rounded-lg text-center border border-brand-teal/40 shadow-xl">
-            <h4 class="text-sm font-bold text-white mb-1">🔓 Unlock Complete Risk Audit & Material Breakdown</h4>
-            <p class="text-xs text-slate-300 mb-3">Enter your details to reveal all identified tender risks and export the takeoff.</p>
-            
-            <form id="lead-form" onsubmit="unlockAudit(event)" class="w-full max-w-sm space-y-2 text-left">
-              <input type="text" id="lead-name" placeholder="Full Name" required class="w-full px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-amber" />
-              <input type="email" id="lead-email" placeholder="Work Email" required class="w-full px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-amber" />
-              <input type="tel" id="lead-phone" placeholder="Mobile Number (e.g. 0400 000 000)" required class="w-full px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-amber" />
-              
-              <select id="lead-trade" required class="w-full px-3 py-2 bg-brand-card border border-brand-border rounded-lg text-xs text-slate-200 focus:outline-none focus:border-brand-amber">
-                <option value="" disabled selected>Select Primary Trade</option>
-                <option value="Electrical">Electrical Contractor</option>
-                <option value="Plumbing">Plumbing Contractor</option>
-                <option value="HVAC/Mechanical">HVAC / Mechanical</option>
-                <option value="General Subbie">General Subcontractor</option>
-              </select>
-
-              <button type="submit" class="w-full py-2.5 bg-brand-amber hover:bg-brand-hover text-brand-bg font-extrabold rounded-lg transition text-xs shadow-md mt-1 cursor-pointer">
-                Unlock Full Audit Instantly →
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Unlocked Risks Container -->
-        <div id="risk-list" class="hidden space-y-2 mt-4 border-t border-brand-border pt-4"></div>
-      </div>
-    </div>
-  </main>
-
-  <script>
+<script>
     const fileInput = document.getElementById('pdf-input');
     const fileLabel = document.getElementById('file-label');
     let cachedAuditData = null;
@@ -128,12 +9,18 @@
       }
     });
 
-    function fileToBase64(file) {
+    function getBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
         reader.readAsDataURL(file);
+        reader.onload = () => {
+          let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+          if ((encoded.length % 4) !== 0) {
+            encoded += '='.repeat((4 - encoded.length % 4) % 4);
+          }
+          resolve(encoded);
+        };
+        reader.onerror = error => reject(error);
       });
     }
 
@@ -145,16 +32,16 @@
       const resultsDiv = document.getElementById('results');
       const summaryP = document.getElementById('audit-summary');
 
-      btn.innerText = 'Analyzing Drawing Set with Gemini Vision AI...';
+      btn.innerText = 'Converting & Analyzing Drawing Set...';
       btn.disabled = true;
 
       try {
-        const base64Data = await fileToBase64(file);
+        const base64String = await getBase64(file);
 
         const response = await fetch('https://withered-salad-c16e.letstalk.workers.dev', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pdfBase64: base64Data })
+          body: JSON.stringify({ pdfBase64: base64String })
         });
 
         const data = await response.json();
@@ -193,5 +80,3 @@
       riskListDiv.classList.remove('hidden');
     }
   </script>
-</body>
-</html>
