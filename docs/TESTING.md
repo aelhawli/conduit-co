@@ -7,7 +7,7 @@ Performed locally on 22 September 2026 with Node 24.19.0 / pnpm 11.19.0. No prod
 | Frozen lockfile installation | Passed |
 | ESLint | Passed |
 | Strict TypeScript checking | Passed |
-| Unit, security and PostgreSQL/PGlite tests | 47 passed across 3 test files |
+| Unit, security, build isolation and PostgreSQL/PGlite tests | 73 passed across 4 test files |
 | Chromium browser tests | 10 passed, 5 scenarios on desktop and mobile |
 | Staging web/Worker build | Passed |
 | Repeated-build hash comparison | Identical HTML, JS, CSS, response headers and Worker bundle |
@@ -35,6 +35,10 @@ The browser tests mock Turnstile and API responses. PostgreSQL tests execute bot
 - All server milestone records; client event allowlist and idempotency; repeated upload attempts counted separately.
 - AI HTML injection rendered as inert text.
 - Desktop/mobile happy path, failed lead save/retry, failed replacement audit, changing files in flight and invalid file selection.
+- Preview/production build rejection, fixed API origins, separate database/Worker/rate-limit configuration and rejection of plaintext secret vars.
+- Worker proxy rejection and stable rate keys despite changes to user-controlled forwarding headers.
+- Exhaustive direct privileges for all 16 tables and execute/search-path checks for all five RPCs; lead mass-assignment and unsupported methods.
+- Fresh database schema reproduction and failed raw migration replay preserving existing data.
 
 ## Remaining release validation
 

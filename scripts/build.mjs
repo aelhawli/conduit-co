@@ -2,19 +2,10 @@ import { build } from 'esbuild-wasm';
 import { readFile, mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { buildEnvironment } from './build-environment.mjs';
 const require = createRequire(import.meta.url);
 const environment = process.argv[2] ?? 'staging';
-if (!['staging','production','test'].includes(environment)) throw new Error('Unknown build environment');
-const defaults = {
-  staging: 'https://conduit-api-staging.letstalk.workers.dev',
-  production: 'https://conduit-api-production.letstalk.workers.dev',
-  test: 'http://127.0.0.1:8787'
-};
-const api = process.env.PUBLIC_API_BASE_URL || defaults[environment];
-const siteKey = process.env.PUBLIC_TURNSTILE_SITE_KEY || (environment === 'test' ? '1x00000000000000000000AA' : '');
-const url = new URL(api);
-if (url.origin !== api || (environment !== 'test' && url.protocol !== 'https:')) throw new Error('API URL must be an HTTPS origin without a trailing slash');
-if (environment === 'production' && (!siteKey || siteKey.startsWith('1x000') || siteKey.startsWith('2x000') || siteKey.startsWith('3x000'))) throw new Error('Production requires a real PUBLIC_TURNSTILE_SITE_KEY');
+const { api, siteKey } = buildEnvironment(environment);
 if (!siteKey) console.warn('No Turnstile site key: build is review-only; audit button is disabled until configured.');
 await mkdir('dist/web', { recursive: true });
 await mkdir('dist/worker', { recursive: true });

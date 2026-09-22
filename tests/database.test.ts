@@ -17,6 +17,29 @@ beforeAll(async () => {
 });
 afterAll(async () => { await db.close(); });
 describe('PostgreSQL migrations and RPCs', () => {
+  it('reproduces the schema on a fresh database and fails safely on raw SQL replay', async () => {
+    const clean = new PGlite();
+    try {
+      await clean.exec('create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key); grant usage on schema public to anon, authenticated, service_role;');
+      for (const file of ['202609220001_foundation.sql', '202609220002_funnel_functions.sql']) await clean.exec(await readFile(`supabase/migrations/${file}`, 'utf8'));
+      const catalog = "select c.relname, c.relrowsecurity, c.relacl::text, a.attname, format_type(a.atttypid,a.atttypmod) as type from pg_class c join pg_namespace n on n.oid=c.relnamespace join pg_attribute a on a.attrelid=c.oid where n.nspname='public' and c.relkind='r' and a.attnum>0 and not a.attisdropped order by c.relname,a.attnum";
+      expect((await clean.query(catalog)).rows).toEqual((await db.query(catalog)).rows);
+      await clean.exec("insert into public.organisations(name) values ('Preserve on replay')");
+      await expect(clean.exec(await readFile('supabase/migrations/202609220001_foundation.sql','utf8'))).rejects.toThrow(/already exists/);
+      await clean.exec('rollback');
+      expect((await clean.query('select name from public.organisations')).rows).toEqual([{name:'Preserve on replay'}]);
+    } finally { await clean.close(); }
+  });
+  it('denies every direct table privilege to all API roles and all RPCs to browser roles', async () => {
+    for (const role of ['anon', 'authenticated', 'service_role']) {
+      const tables = await db.query<{ name: string; allowed: boolean }>("select c.relname as name, has_table_privilege($1, c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') as allowed from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'", [role]);
+      expect(tables.rows).toHaveLength(16); expect(tables.rows.every(t => !t.allowed)).toBe(true);
+      const functions = await db.query<{ allowed: boolean; secure: boolean }>("select has_function_privilege($1,p.oid,'EXECUTE') as allowed, p.prosecdef and p.proconfig @> array['search_path=\"\"'] as secure from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'", [role]);
+      expect(functions.rows).toHaveLength(5);
+      expect(functions.rows.every(f => f.allowed === (role === 'service_role') && f.secure)).toBe(true);
+    }
+    expect(await scalar("select count(*)::int from pg_policies where schemaname='public'")).toBe(0);
+  });
   it('creates every requested domain and enables RLS on every table', async () => {
     const result = await db.query<{relname:string;relrowsecurity:boolean}>("select relname, relrowsecurity from pg_class join pg_namespace n on n.oid=relnamespace where n.nspname='public' and relkind='r'");
     expect(result.rows).toHaveLength(16); expect(result.rows.every(t=>t.relrowsecurity)).toBe(true);

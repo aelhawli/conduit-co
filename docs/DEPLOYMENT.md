@@ -14,7 +14,7 @@ Make CI checks required on `main` and require review before merge. Neither branc
 | --- | --- |
 | Cloudflare (existing account) | New `conduit-api-staging` and `conduit-api-production` Workers; native rate-limit bindings; separate staging Pages project with no Git auto-builds |
 | Supabase | Separate staging and production PostgreSQL projects, region selected by owner, access restricted to the operator; production backup/retention plan |
-| Google Gemini (existing integration) | Confirm `gemini-2.5-flash` availability, quotas and data-processing settings; use separate restricted staging/production API credentials |
+| Google Gemini (existing integration) | Confirm `gemini-2.5-flash` availability, quotas and data-processing settings; use separate Google projects, billing/quota limits and restricted staging/production API credentials |
 | Cloudflare Turnstile | Separate staging and production widgets; only exact approved frontend hostnames |
 | GitHub (existing repository) | Checks-only workflow and review/branch protections |
 
@@ -33,7 +33,7 @@ No Stripe, PostHog, object-storage, queue, container or additional AI service is
 | `ENVIRONMENT` | `wrangler.jsonc` | `staging` or `production` |
 | `GEMINI_MODEL` | `wrangler.jsonc` | Currently `gemini-2.5-flash`; change only after validation |
 | `DAILY_AUDIT_LIMIT` | `wrangler.jsonc` | Attempts per UTC day: 25 staging / 250 production initially |
-| `PUBLIC_API_BASE_URL` | Frontend build environment | Defaults to the corresponding new Worker URL |
+| `PUBLIC_API_BASE_URL` | Frontend build environment | Optional; must exactly equal the environment's reviewed Worker URL; cross-environment overrides fail |
 | `PUBLIC_TURNSTILE_SITE_KEY` | Frontend build environment | Public widget identifier; production build requires a real key |
 
 Rate-limit namespaces `71001/71002` (staging) and `72001/72002` (production) are proposed identifiers. Confirm they are unused in this Cloudflare account before deployment, or select distinct identifiers. Shared identifiers share counters. The per-IP bindings enforce 3 audit requests/minute and 30 lead/event requests/minute per endpoint, with Cloudflare's documented location-local/eventually consistent behaviour. The PostgreSQL daily budget is atomic and global.
@@ -74,9 +74,9 @@ Production origins currently allow `https://conduitco.io` and `https://conduit-c
 2. Export/record the current Pages deployment and legacy Worker version; baseline identifiers are in `docs/baseline/deployment.json`. Preserve the existing live deployment while staging is validated.
 3. Apply the reviewed additive migrations to the separate production Supabase project. Confirm RLS and RPC grants. No existing app data is migrated by these files.
 4. Configure **new** `conduit-api-production` with the four secrets. Use new/restricted production Gemini credentials. Confirm `GEMINI_API_KEY` is a `secret_text` binding and absent from plaintext vars. Deploy this Worker manually using `--env production`. It does not replace the legacy endpoint.
-5. Build with the production API URL and real Turnstile public site key using `pnpm build:production`. Set the Pages project output directory to `dist/web` and build command to `pnpm build:production` for any future approved Git build; keep auto-build disabled. For this release, manually publish `dist/web` to `conduit-co` with `--branch main`.
+5. Build locally with the production API URL and real Turnstile public site key using `pnpm build:production`. Set the Pages project output directory to `dist/web`; keep auto-build disabled. Production compilation deliberately refuses Cloudflare Pages build environments. For this release, manually publish only `dist/web` to `conduit-co` with `--branch main`; never upload a production artifact to a preview branch.
 6. Run a production smoke test using an authorised test contact/document, verify lead persistence and events, and monitor safe error codes and the daily budget. Do not rely on a successful static `/health` response to prove database or provider readiness.
-7. After an agreed short rollback window, retire or restrict the legacy unauthenticated endpoint and revoke its old plaintext-configured Gemini key. This is a separate explicit release action; do not leave the old API as a permanent bypass. Keep the baseline source for historical review. Revoking the old key means the original legacy backend can no longer be used for rollback without a fresh secret.
+7. Retire the legacy unauthenticated endpoint and revoke its old plaintext-configured Gemini key immediately after successful cutover smoke tests, before declaring the release complete. An open-ended rollback window is not an acceptable abuse bypass. Disable its workers.dev endpoint, preview URLs and any routes. Keep the baseline source for historical review. Exact emergency rollback and its security tradeoff are documented in `RELEASE-READINESS.md`; a baseline rollback after retirement needs a fresh restricted credential supplied as a secret.
 
 No live credentials were copied into this branch and the existing plaintext binding was not changed. Converting it or changing Worker secrets creates cloud state/version changes and is intentionally part of the approved manual cutover.
 
@@ -87,6 +87,8 @@ No live credentials were copied into this branch and the existing plaintext bind
 - **After old key retirement:** do not blindly restore an insecure/broken legacy API. Restore the last validated M1 Worker/Pages pair. If a baseline rollback is unavoidable, an operator must first restore compatible service credentials as secrets under a reviewed emergency plan.
 - **Database:** these are additive foundation migrations. Roll back application traffic first, retain collected leads and job history, and repair forward. Do not drop tables or run destructive down migrations against captured leads. Restore a database backup only after a separate data-recovery decision.
 - Keep production auto-deployment disabled throughout rollback. Record deployment IDs, time and operator actions.
+
+Use the detailed ordered checklist in `RELEASE-READINESS.md` for the release assessment, smoke tests and first-release rollback. Its stricter cutover gates supersede the earlier review package.
 
 ## Operational limits before launch
 

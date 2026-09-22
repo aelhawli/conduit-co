@@ -34,6 +34,9 @@ export async function handleRequest(request: Request, env: WorkerEnv, dependenci
       return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Max-Age': '600', Vary: 'Origin' } });
     }
     if (request.method !== 'POST') throw new AppError(405, 'METHOD_NOT_ALLOWED', 'This method is not allowed.');
+    // This API accepts direct edge requests, not Worker proxies. Same-zone Worker
+    // subrequests can change x-real-ip, which affects CF-Connecting-IP.
+    if (request.headers.has('CF-Worker')) throw new AppError(403, 'ORIGIN_NOT_ALLOWED', 'This request is not allowed.');
     if (!env.RATE_LIMIT_SALT || env.RATE_LIMIT_SALT.length < 32) throw unavailable();
     const ip = request.headers.get('CF-Connecting-IP');
     if (!ip && env.ENVIRONMENT === 'production') throw unavailable();

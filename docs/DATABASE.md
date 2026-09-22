@@ -2,6 +2,8 @@
 
 Two additive migrations are included. They have been executed in local PGlite tests, not against a hosted Supabase project.
 
+Migrations are ordered, transactional and reproducible on a fresh database. The raw CREATE statements are intentionally not rerunnable: repeat application fails rather than hiding schema drift. Use Supabase's migration history (`supabase_migrations.schema_migrations`) via `supabase db push`, which skips applied versions; a second push must report no pending migrations. Never paste the files repeatedly or use migration repair to conceal failed application. Local tests verify fresh-schema reproduction and safe raw replay failure without data loss; hosted CLI history behaviour remains a staging gate.
+
 | Migration | Contents |
 | --- | --- |
 | `202609220001_foundation.sql` | 16 tables, keys, constraints, indexes, RLS and explicit privilege revocation |
@@ -21,6 +23,8 @@ Two additive migrations are included. They have been executed in local PGlite te
 - `funnel_daily_usage`: atomic global UTC-day audit attempt budget.
 
 Future tenant records use composite organisation foreign keys to prevent cross-organisation relationships. No future feature endpoints or user-facing operations have been implemented. All foundation tables have RLS enabled, no end-user policies and no direct grants to `anon`, `authenticated`, or `service_role`. This is intentional deny-by-default, not an unfinished open data API. Future milestones must add tested policies and scoped APIs before opening access.
+
+This is not yet a complete customer-account authorisation model. Leads/events are global funnel records and must stay private. Before tenant features ship, add membership-based RLS and project-consistent document/job/finding references: current composite keys enforce organisation consistency but permit references to another project in the same organisation. No M1 customer API exposes these future tables.
 
 ## Funnel RPC contracts
 

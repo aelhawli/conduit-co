@@ -32,6 +32,20 @@ beforeEach(() => {
 const run = (r: Request) => handleRequest(r, env, { database: db, fetcher });
 
 describe('Worker boundary and abuse protection', () => {
+  it('ignores user-controlled forwarding headers when constructing rate keys', async () => {
+    for (const value of ['198.51.100.1', '203.0.113.10']) {
+      const r = request('/api/audits', auditBody());
+      r.headers.set('X-Forwarded-For', value); r.headers.set('X-Real-IP', value); r.headers.set('True-Client-IP', value);
+      expect((await run(r)).status).toBe(200);
+    }
+    const calls = vi.mocked(env.AUDIT_RATE_LIMITER.limit).mock.calls;
+    expect(calls[0]).toEqual(calls[1]);
+  });
+  it('rejects Worker subrequests before rate limiting or provider calls', async () => {
+    const r = request('/api/audits', auditBody()); r.headers.set('CF-Worker', 'proxy.example');
+    expect((await run(r)).status).toBe(403); expect(fetcher).not.toHaveBeenCalled();
+    expect(env.AUDIT_RATE_LIMITER.limit).not.toHaveBeenCalled();
+  });
   it.each(['https://evil.example','https://conduitco.io.evil.example',null])('rejects origin %s before outbound work', async o => {
     expect((await run(request('/api/audits', auditBody(), o))).status).toBe(403); expect(fetcher).not.toHaveBeenCalled();
   });
@@ -95,6 +109,14 @@ describe('Audit and lead persistence', () => {
   });
   it('saves a lead before returning risks', async () => {
     const r = await run(request('/api/leads',lead)); expect(r.status).toBe(200); expect((await r.json()).audit).toEqual(audit); expect(db.captureLead).toHaveBeenCalledWith(lead,await hash(lead.auditToken));
+  });
+  it.each(['organisation_id', 'conversion_state', 'created_at', 'id'])('rejects lead mass assignment of %s', async field => {
+    expect((await run(request('/api/leads', { ...lead, [field]: 'attacker-controlled' }))).status).toBe(400);
+    expect(db.captureLead).not.toHaveBeenCalled();
+  });
+  it.each(['GET', 'PATCH', 'DELETE', 'PUT'])('does not expose a lead %s operation', async method => {
+    expect((await run(new Request('https://api.example.com/api/leads', { method, headers: { Origin: origin } }))).status).toBe(405);
+    expect(db.captureLead).not.toHaveBeenCalled();
   });
   it.each([{ company:'' }, { email:'bad' }, { mobile:'abcdefghi' }, { contactConsent:false }, { website:'spam' }])('rejects invalid lead fields %#', async fields => {
     expect((await run(request('/api/leads',{...lead,...fields}))).status).toBe(400); expect(db.captureLead).not.toHaveBeenCalled();
