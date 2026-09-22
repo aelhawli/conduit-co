@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A free preliminary AI tender audit for Australian trade contractors. Review potential scope risks in your PDF drawings." />
+  <title>Conduit Co. | Free Tender Audit</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="stylesheet" href="/app.css" />
+  <script type="module" src="/app.js"></script>
+</head>
+<body class="bg-brand-bg text-slate-100 font-sans min-h-screen">
+  <nav class="border-b border-brand-border p-4 max-w-6xl mx-auto flex justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <img src="/logo.png" alt="Conduit Co. Logo" width="40" height="40" class="w-10 h-10 rounded-xl shadow-md border border-brand-border" />
+      <span class="text-xl font-extrabold tracking-wider text-white">CONDUIT <span class="text-brand-amber">CO.</span></span>
+    </div>
+    <span class="text-xs bg-brand-card text-brand-amber px-3 py-1.5 rounded-full border border-brand-border font-medium">🇦🇺 Built for Aussie Subbies</span>
+  </nav>
+  <main class="max-w-4xl mx-auto px-4 pt-12 md:pt-16 pb-24 text-center">
+    <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4 tracking-tight leading-tight">Stop Spending Sunday Nights Quoting.</h1>
+    <p class="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">Get a preliminary AI review of your PDF drawings and uncover potential tender scope risks.</p>
+    <div class="bg-brand-card p-5 md:p-8 rounded-2xl border border-brand-border max-w-2xl mx-auto text-left shadow-2xl">
+      <h2 class="text-xl font-bold text-brand-amber text-center mb-2">⚡ Free Tender Trap Audit</h2>
+      <p class="text-xs text-slate-300 text-center mb-6">Upload your PDF drawings for a scope summary and potential risks to review.</p>
+      <form id="audit-form" class="space-y-4">
+        <label id="drop-zone" for="pdf-input" class="block border-2 border-dashed border-brand-teal/50 hover:border-brand-amber focus-within:border-brand-amber transition rounded-xl p-6 text-center cursor-pointer bg-brand-bg/60">
+          <span class="text-4xl block mb-2" aria-hidden="true">📄</span>
+          <span class="text-sm text-slate-100 font-medium block" id="file-label">Choose a PDF or drag and drop your plan set</span>
+          <span id="file-help" class="text-xs text-slate-400 block mt-1 mb-3">One PDF, up to 7 MiB</span>
+          <input type="file" id="pdf-input" accept=".pdf,application/pdf" aria-describedby="file-help" class="block w-full text-xs text-slate-300" />
+        </label>
+        <div id="turnstile" class="min-h-16 flex justify-center"></div>
+        <p class="text-xs text-slate-400">Your PDF is sent to Google Gemini to perform this audit. Conduit does not store the original PDF in this version. Audit results are saved to support the lead and review flow. Only upload documents you are authorised to share.</p>
+        <button id="scan-btn" type="submit" class="w-full py-4 bg-brand-amber hover:bg-brand-hover disabled:opacity-50 text-brand-bg font-extrabold rounded-xl transition text-base shadow-lg">Run Free Tender Audit →</button>
+        <p id="audit-status" role="status" aria-live="polite" class="text-sm text-slate-200"></p>
+        <p id="audit-error" role="alert" class="text-sm text-red-300" hidden></p>
+      </form>
+      <section id="results" class="mt-6 p-5 bg-brand-bg rounded-xl border border-brand-border" hidden>
+        <h3 class="text-brand-teal font-bold text-sm mb-2">AI Scope Summary</h3>
+        <p id="audit-summary" class="text-sm text-slate-200 mb-4 leading-relaxed"></p>
+        <section id="lead-gate" class="mt-4 border-t border-brand-border pt-4">
+          <div class="bg-brand-card p-4 rounded-lg text-center border border-brand-teal/40">
+            <h4 class="text-sm font-bold text-white mb-1">🔓 Unlock Your Tender Risk Audit</h4>
+            <p class="text-xs text-slate-300 mb-4">Enter your details to reveal the potential risks identified in your drawings.</p>
+            <form id="lead-form" class="w-full max-w-sm mx-auto space-y-3 text-left">
+              <label class="field-label" for="lead-name">Full name<input type="text" id="lead-name" name="name" autocomplete="name" maxlength="120" required class="field-input" /></label>
+              <label class="field-label" for="lead-company">Company<input type="text" id="lead-company" name="company" autocomplete="organization" maxlength="160" required class="field-input" /></label>
+              <label class="field-label" for="lead-email">Work email<input type="email" id="lead-email" name="email" autocomplete="email" maxlength="254" required class="field-input" /></label>
+              <label class="field-label" for="lead-phone">Mobile<input type="tel" id="lead-phone" name="mobile" autocomplete="tel" maxlength="24" placeholder="0400 000 000" required class="field-input" /></label>
+              <label class="field-label" for="lead-trade">Primary trade<select id="lead-trade" name="trade" required class="field-input">
+                <option value="" disabled selected>Select primary trade</option>
+                <option value="Electrical">Electrical Contractor</option><option value="Plumbing">Plumbing Contractor</option>
+                <option value="HVAC/Mechanical">HVAC / Mechanical</option><option value="General Subbie">General Subcontractor</option>
+              </select></label>
+              <div class="hidden" aria-hidden="true"><label>Website<input id="lead-website" name="website" tabindex="-1" autocomplete="off" /></label></div>
+              <label class="flex gap-2 items-start text-xs text-slate-300"><input type="checkbox" id="lead-consent" required class="mt-1" /><span>I agree that Conduit Co. may save these details and contact me about this audit. This is not consent to unrelated marketing.</span></label>
+              <button id="unlock-btn" type="submit" class="w-full py-3 bg-brand-amber hover:bg-brand-hover disabled:opacity-50 text-brand-bg font-extrabold rounded-lg transition text-sm">Unlock Full Audit →</button>
+              <p id="lead-error" role="alert" class="text-sm text-red-300" hidden></p>
+            </form>
+          </div>
+        </section>
+        <section id="risk-list" class="space-y-3 mt-4 border-t border-brand-border pt-4" hidden></section>
+        <p class="text-xs text-slate-400 mt-4">AI findings may be incomplete or incorrect. Check all findings against the tender documents before quoting. This is not a verified material takeoff.</p>
+      </section>
+    </div>
+    <noscript><p class="mt-6">Please enable JavaScript to run a free tender audit.</p></noscript>
+  </main>
+</body>
+</html>

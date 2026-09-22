@@ -1,0 +1,5 @@
+# Copy to .dev.vars.staging locally. Never commit real values.
+GEMINI_API_KEY=replace-with-staging-key
+SUPABASE_SERVICE_ROLE_KEY=replace-with-staging-service-role-key
+TURNSTILE_SECRET_KEY=replace-with-staging-secret
+RATE_LIMIT_SALT=replace-with-at-least-32-random-characters

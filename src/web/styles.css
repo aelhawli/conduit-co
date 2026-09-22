@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid #F0A219; outline-offset: 3px; }
+}
+@layer components {
+  .field-label { @apply block text-xs text-slate-200; }
+  .field-input { @apply block mt-1 w-full px-3 py-2 bg-brand-bg border border-brand-border rounded-lg text-sm text-white placeholder-slate-400; }
+}

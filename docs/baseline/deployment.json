@@ -1,0 +1,22 @@
+{
+  "capturedDate": "2026-09-22",
+  "repositoryCommit": "3dcf9ea3e7664fbd22ee991aace8630245b18bdb",
+  "pages": {
+    "project": "conduit-co",
+    "domain": "conduitco.io",
+    "productionBranch": "main",
+    "productionDeployment": "d26b3143-6454-4618-9a00-7b3df55d91ea",
+    "buildCommand": "",
+    "outputDirectory": "/",
+    "automaticProductionDeployments": true,
+    "automaticPreviewBranches": "all"
+  },
+  "worker": {
+    "name": "withered-salad-c16e",
+    "url": "https://withered-salad-c16e.letstalk.workers.dev",
+    "activeVersion": "a6117d3b-42c9-43b7-811c-0978e988815e",
+    "deploymentSource": "quick_editor",
+    "compatibilityDate": "2026-09-21",
+    "bindings": [{ "name": "GEMINI_API_KEY", "type": "plain_text", "value": "OMITTED" }]
+  }
+}
