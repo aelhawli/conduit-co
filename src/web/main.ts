@@ -129,7 +129,7 @@ leadForm.addEventListener('submit', e => { e.preventDefault(); void captureLead(
 void sendEvent(__API_BASE_URL__, { eventId: crypto.randomUUID(), sessionId, name: 'landing_page_visit' });
 
 window.conduitTurnstileReady = () => {
-  widgetId = window.turnstile?.render(element('turnstile'), {
+  widgetId = window.turnstile?.render(element('turnstile-widget'), {
     sitekey: __TURNSTILE_SITE_KEY__, action: 'audit', callback: token => { verification = token; },
     'expired-callback': () => { verification = ''; },
     'error-callback': () => { verification = ''; error('audit-error', 'The security check could not load. Please refresh and try again.'); }

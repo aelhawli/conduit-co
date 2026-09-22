@@ -6,7 +6,7 @@ const pdf = {name:'drawing.pdf',mimeType:'application/pdf',buffer:Buffer.from('%
 async function setup(page: Page, options: { failLead?:boolean; failAudit?:boolean; delayAudit?:boolean } = {}) {
   const events: Record<string,unknown>[]=[];
   const leads: Record<string,unknown>[]=[];
-  await page.route('https://challenges.cloudflare.com/**', route=>route.fulfill({contentType:'text/javascript',body:`window.turnstile={render:(el,o)=>{window.testChallenge=o; o.callback('test-token'); return 'widget';},reset:()=>window.testChallenge.callback('test-token')};window.conduitTurnstileReady();`}));
+  await page.route('https://challenges.cloudflare.com/**', route=>route.fulfill({contentType:'text/javascript',body:`if(window.turnstile) throw new Error('Turnstile global already defined before SDK load'); window.turnstile={render:(el,o)=>{window.testChallenge=o; o.callback('test-token'); return 'widget';},reset:()=>window.testChallenge.callback('test-token')};window.conduitTurnstileReady();`}));
   await page.route('http://127.0.0.1:8787/**', async route=>{
     const url=new URL(route.request().url());
     if(route.request().method()==='OPTIONS') { await route.fulfill({status:204,headers:{'access-control-allow-origin':'http://127.0.0.1:4173','access-control-allow-methods':'POST','access-control-allow-headers':'content-type'}}); return; }

@@ -1,5 +1,15 @@
 # Milestone 1 staging setup — blocked before acceptance
 
+## Checkpoint continuation — 23 September 2026 (Sydney)
+
+Resumed from approved checkpoint `7ee197bbaf999891f0a3867a0ffd64ed163ec88c`, on the existing branch. Live inspection found that Pages deployment `dae8f481-7e3f-49a2-b19e-5e6b2cf2eba3` and the staging Supabase secret had been added since the handoff below. The Supabase connector is now available; the existing project and both migration history entries were confirmed without repeating migrations.
+
+The real frontend exposed a Turnstile initialization bug: `id="turnstile"` created a browser named global, causing the real SDK to treat an HTMLElement as an existing API and fail with `render is not a function`. Renamed the container to `turnstile-widget` and strengthened the browser SDK mock to reject an already-defined global, so the original code would fail the existing audit tests. Staging Wrangler configuration now matches the live staging Supabase URL and exact hosted CORS origin; production configuration is unchanged.
+
+After these fixes: 73 automated tests and 10 desktop/mobile browser tests pass; lint, strict types, build, generated Worker types, both local environment dry-runs and whitespace checks pass. Dependency audit reports zero vulnerabilities. These results do not establish hosted acceptance. Hosted HTTP testing confirms CORS, PDF-size validation, invalid Turnstile rejection and anonymous database denial; actual Worker database operations still return safe 503 errors and are under investigation. The Gemini secret was absent at the initial live check. The original production Worker credential must not be reused for staging.
+
+The entries below are historical; the current hosted workflow remains incomplete until the outstanding connectivity and browser checks pass.
+
 22 September 2026. Started from release candidate `d1c6eda`. Staging setup is partial; the full hosted acceptance suite has **not** passed. Production recommendation: **NO-GO until staging acceptance is completed**.
 
 ## 1. Staging URLs
