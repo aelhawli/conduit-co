@@ -3,7 +3,7 @@ const job='22222222-2222-4222-8222-222222222222';
 const token='a'.repeat(64);
 const risk = '<img src=x onerror=alert(1)> Scope risk';
 const pdf = {name:'drawing.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\n%%EOF')};
-async function setup(page: Page, options: { failLead?:boolean; failAudit?:boolean; delayAudit?:boolean } = {}) {
+async function setup(page: Page, options: { failLead?:boolean; failAudit?:boolean; delayAudit?:boolean; temporaryFailure?:boolean } = {}) {
   const events: Record<string,unknown>[]=[];
   const leads: Record<string,unknown>[]=[];
   await page.route('https://challenges.cloudflare.com/**', route=>route.fulfill({contentType:'text/javascript',body:`if(window.turnstile) throw new Error('Turnstile global already defined before SDK load'); window.turnstile={render:(el,o)=>{window.testChallenge=o; o.callback('test-token'); return 'widget';},reset:()=>window.testChallenge.callback('test-token')};window.conduitTurnstileReady();`}));
@@ -14,7 +14,7 @@ async function setup(page: Page, options: { failLead?:boolean; failAudit?:boolea
     if(url.pathname==='/api/events') { events.push(route.request().postDataJSON()); await route.fulfill({headers,json:{success:true}}); }
     else if(url.pathname==='/api/audits') {
       if(options.delayAudit) await new Promise(resolve=>setTimeout(resolve,400));
-      await route.fulfill({headers,status:options.failAudit?502:200,json:options.failAudit?{error:{code:'AUDIT_FAILED'}}:{success:true,jobId:job,auditToken:token,summary:'Electrical scope summary.',expiresAt:new Date(Date.now()+86400000).toISOString()}});
+      await route.fulfill({headers,status:options.failAudit?502:200,json:options.failAudit?{error:{code:options.temporaryFailure?'AUDIT_TEMPORARILY_UNAVAILABLE':'AUDIT_FAILED'}}:{success:true,jobId:job,auditToken:token,summary:'Electrical scope summary.',expiresAt:new Date(Date.now()+86400000).toISOString()}});
     } else if(url.pathname==='/api/leads') {
       leads.push(route.request().postDataJSON());
       await route.fulfill({headers,status:options.failLead?503:200,json:options.failLead?{error:{code:'SERVICE_UNAVAILABLE'}}:{success:true,audit:{summary:'Summary',topRisks:[{title:risk,description:'Check the drawing legend.'}]}}});
@@ -62,4 +62,20 @@ test('rejects a non-PDF without an API audit request',async({page})=>{
   await setup(page); let requests=0; page.on('request',r=>{if(r.url().endsWith('/api/audits'))requests++;});
   await page.locator('#pdf-input').setInputFiles({name:'notes.txt',mimeType:'text/plain',buffer:Buffer.from('text')}); await page.locator('#scan-btn').click();
   await expect(page.locator('#audit-error')).toContainText('PDF'); expect(requests).toBe(0);
+});
+
+test('exhausted provider retry is recoverable and never unlocks or auto-resubmits', async ({page}) => {
+  const options = {failAudit:true, temporaryFailure:true, delayAudit:true};
+  const {events,leads} = await setup(page,options);
+  let requests=0; page.on('request',r=>{if(r.url().endsWith('/api/audits'))requests++;});
+  await page.locator('#pdf-input').setInputFiles(pdf); await page.locator('#scan-btn').click();
+  await expect(page.locator('#audit-status')).toContainText('retried automatically');
+  await expect(page.locator('#scan-btn')).toBeDisabled();
+  await expect(page.locator('#audit-error')).toContainText('temporarily busy');
+  await expect(page.locator('#scan-btn')).toBeEnabled(); await expect(page.locator('#results')).toBeHidden();
+  expect(requests).toBe(1); expect(leads).toHaveLength(0);
+  expect(events.filter(e=>e.name==='audit_unlocked'||e.name==='lead_form_displayed')).toHaveLength(0);
+  options.failAudit=false;
+  await page.locator('#scan-btn').click(); await expect(page.locator('#lead-gate')).toBeVisible();
+  expect(requests).toBe(2); await expect(page.locator('#risk-list')).toBeHidden();
 });

@@ -65,7 +65,9 @@ async function request(path: string, body: unknown, signal: AbortSignal): Promis
       RATE_LIMITED: 'Too many requests. Please wait a minute and try again.', AUDIT_CAPACITY: 'The free audit service has reached its daily capacity. Please try again tomorrow.',
       VERIFICATION_FAILED: 'Please complete the security check again.', INVALID_PDF: 'Please select a complete, valid PDF.',
       AUDIT_UNAVAILABLE: 'This audit has expired. Please run a new audit.', INVALID_LEAD: 'Please check all contact details and consent.',
-      AUDIT_TIMEOUT: 'The audit took too long. Please try a smaller drawing set.', REQUEST_TOO_LARGE: 'Please select a PDF up to 7 MiB.'
+      AUDIT_TIMEOUT: 'The analysis service took too long. Your audit has not been unlocked. Complete the security check and try again shortly.',
+      AUDIT_TEMPORARILY_UNAVAILABLE: 'The analysis service is temporarily busy. Your audit has not been unlocked. Complete the security check and try again shortly.',
+      AUDIT_FAILED: 'We could not analyse this PDF. Complete the security check to try again later, or select another PDF.', REQUEST_TOO_LARGE: 'Please select a PDF up to 7 MiB.'
     };
     throw new Error(typeof code === 'string' && messages[code] || 'We could not complete that request. Please try again shortly.');
   }
@@ -88,7 +90,7 @@ async function runAudit(): Promise<void> {
   if (!file || !file.name.toLowerCase().endsWith('.pdf') || file.size === 0 || file.size > MAX_PDF_BYTES) { error('audit-error', 'Please select a PDF up to 7 MiB.'); return; }
   if (!verification) { error('audit-error', 'Please complete the security check first.'); return; }
   const token = verification;
-  button.disabled = true; button.textContent = 'Analysing your drawing set…'; status.textContent = 'Uploading and analysing. Please keep this page open.';
+  button.disabled = true; button.textContent = 'Analysing your drawing set…'; status.textContent = 'Uploading and analysing. Temporary service failures are retried automatically; this may take up to 90 seconds. Please keep this page open.';
   pending = new AbortController();
   const signal = AbortSignal.any([pending.signal, AbortSignal.timeout(120000)]);
   void sendEvent(__API_BASE_URL__, { eventId: crypto.randomUUID(), sessionId, name: 'tender_upload_started' });
@@ -99,7 +101,7 @@ async function runAudit(): Promise<void> {
     if (version !== generation) return;
     current = data; element('audit-summary').textContent = data.summary; results.hidden = false; status.textContent = 'Audit complete. Enter your details to reveal the risks.';
     void sendEvent(__API_BASE_URL__, { eventId: crypto.randomUUID(), sessionId, name: 'lead_form_displayed', jobId: data.jobId, auditToken: data.auditToken });
-  } catch (err) { if (version === generation) { status.textContent = ''; error('audit-error', err instanceof Error && err.name !== 'ZodError' ? err.message : 'The audit response could not be read. Please try again.'); } }
+  } catch (err) { if (version === generation) { status.textContent = ''; error('audit-error', err instanceof Error && ['TimeoutError', 'AbortError'].includes(err.name) ? 'The request took too long. Complete the security check and try again shortly.' : err instanceof Error && err.name !== 'ZodError' ? err.message : 'The audit response could not be read. Please try again.'); } }
   finally { if (version === generation) { pending = undefined; button.disabled = false; button.textContent = 'Run Free Tender Audit →'; resetVerification(); } }
 }
 

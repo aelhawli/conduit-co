@@ -132,13 +132,13 @@ describe('Audit and lead persistence', () => {
   it('records no successful completion if persistence fails', async () => {
     vi.mocked(db.completeJob).mockRejectedValue(new Error('database offline')); const r = await run(request('/api/audits',auditBody())); expect(r.status).toBe(503); expect(db.failJob).toHaveBeenCalled();
   });
-  it('logs only status for provider HTTP failures, without reading the private body', async () => {
+  it('does not log private provider bodies for permanent HTTP errors', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
-      fetcher.mockImplementation(async input => String(input).includes('siteverify') ? Response.json({success:true,hostname:'conduitco.io',action:'audit'}) : new Response('private provider body containing credentials', {status:429}));
+      fetcher.mockImplementation(async input => String(input).includes('siteverify') ? Response.json({success:true,hostname:'conduitco.io',action:'audit'}) : new Response('private provider body containing credentials', {status:403}));
       const r = await run(request('/api/audits',auditBody()));
       expect(r.status).toBe(502);
-      expect(warn).toHaveBeenCalledWith(JSON.stringify({event:'gemini_http_error',status:429}));
+      expect(warn.mock.calls.map(([line]) => JSON.parse(String(line)))).toContainEqual(expect.objectContaining({event:'gemini_attempt',status:403,willRetry:false}));
       expect(JSON.stringify(warn.mock.calls)).not.toContain('credentials');
       expect(await r.text()).not.toContain('private provider');
     } finally { warn.mockRestore(); }

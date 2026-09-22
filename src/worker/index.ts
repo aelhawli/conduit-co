@@ -55,7 +55,7 @@ export async function handleRequest(request: Request, env: WorkerEnv, dependenci
       const expiresAt = new Date(Date.now() + 86400000).toISOString();
       await db.startJob(jobId, await hash(auditToken), body.sessionId);
       try {
-        const audit = await analysePdf(body.pdfBase64, env, fetcher);
+        const audit = await analysePdf(body.pdfBase64, env, fetcher, jobId);
         await db.completeJob(jobId, audit);
         return json({ success: true, jobId, auditToken, summary: audit.summary, expiresAt }, 200, origin);
       } catch (err) {
