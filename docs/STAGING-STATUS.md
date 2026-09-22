@@ -1,4 +1,44 @@
-# Milestone 1 staging setup — blocked before acceptance
+# Milestone 1 staging — hosted success with provider reliability issue
+
+## Final verification — 23 September 2026 (Sydney)
+
+**CONDITIONAL GO for the Milestone 1 staging implementation; NO-GO for production.** Actual desktop and mobile upload-to-unlock journeys succeeded. Full hosted acceptance is not an unconditional pass: four of six requests to the new Gemini model failed during follow-up/repeat-upload testing, with provider HTTP 503 observed. Do not claim production readiness from the two successful samples. No production changes or Git push were made.
+
+### Current infrastructure
+
+- Frontend: https://conduit-co-staging.pages.dev; Pages deployment `1385b2a7-de38-4eb6-9e5d-6ac0b8e12c73`, branch `staging`, no Git integration or custom production domain. Published HTML/JS/CSS/logo match the configured staging build exactly.
+- API: https://conduit-api-staging.letstalk-531.workers.dev; Worker version `95fd6e41-c73d-409b-9e82-93b993ee8c56` at 100%; deployment `8b3cbd49-2424-4419-abe8-94f605074fbc`. Executable SHA-256 `38397e93fdd43157c18c1ad55dcbe83141d5d28e21c9d2a02ccb96d4d3b4ed61`.
+- Supabase: `kvujhszkrblaovnksafx`, staging only, both existing migrations intact, 16 RLS tables and zero direct table grants to PUBLIC/anon/authenticated/service_role. The five controlled RPCs remain service-role-only. No original PDF document rows were stored.
+- Gemini: replacement key `conduit-staging-gemini-v2` in actual Google project **`gen-lang-client-0675067246`** (display name `gen-lang-client-0948341518`). This is separate from production project `gen-lang-client-0862445008`. Free tier, no billing activated. Earlier unused staging projects were left untouched.
+- Model: staging `gemini-3.8-flash`. Google restricts new-project access to 2.5 models; staging 2.5 requests returned 404. Production model settings remain unchanged and need review before release.
+- All four Worker secrets are `secret_text`. Turnstile `conduit-staging` allows only the staging Pages host. CORS allows only that origin; previews are disabled. Native rate namespaces remain 71001/71002, and the database daily cap is 25 attempts.
+
+### Hosted workflow evidence
+
+| Run | Job | Lead | Result |
+| --- | --- | --- | --- |
+| Desktop, 1280px | `ebb471fb-abb6-4997-b447-dfb74d198d9c` | `ff62c1c1-ad43-40a0-a6bd-a6fefdea0614` | Real PDF, Gemini summary, lead gate, persistence and unlock passed |
+| Mobile, 390px | `60c79a32-28ab-4cb2-ae8e-f3a0494db0e0` | `ef0bdf6d-2d07-4b06-a8ed-665e2c496aec` | Same full flow passed after provider-error retry and human Turnstile verification |
+
+Both synthetic leads retain name/company/email/mobile/trade, consent/time, source `staging_qa`, medium `acceptance`, their desktop/mobile campaign and unlocked state. Each session has all eight funnel event types. Two leads persist, with no duplicate job links. Mobile document width 375px within a 390px viewport: no horizontal overflow. Real rendered risks contain no scripts, images, iframes or links; hostile HTML rendering is covered by automated browser tests, not claimed as a malicious live Gemini response.
+
+Repeat file selection cleared the prior summary/risks/gate state. Non-PDF submission was rejected. Valid repeat attempts correctly kept old results hidden on provider failure, but a second successful same-page audit was not achieved. There are eight recorded attempts: two legacy-model failures, two successful new-model audits, and four failed new-model audits. Failed attempts consume the intended daily budget. No automatic retry loop or unreviewed paid fallback was introduced.
+
+### Validation and security
+
+- 75 automated unit/security/build/database tests and 10 mocked Chromium desktop/mobile tests pass. Lint, strict TypeScript, configured staging build, frozen offline install, generated types and both local Worker dry-runs pass. Both dependency audits report zero known vulnerabilities. No hosted CI run was triggered because no push occurred.
+- 20 hosted HTTP checks pass, including invalid PDF, decoded size enforcement, strict analytics/lead schemas, unknown capability denial, Turnstile rejection, rate-limit burst, exact CORS rejection, and anonymous REST table/RPC denial. Analytics retry event `c93e47fb-4617-46c4-97a2-8fa9c742452a` has exactly one row. Rate limiting is eventual/location-local; no strict globally synchronous fourth-request claim is made.
+- Safe errors were observed for actual provider/database failures. Log review covers a bounded 24-hour query; new-format and legacy key/JWT patterns, synthetic lead emails and PDF base64 markers were absent in the 246 returned events at the recorded check. Browser console inspection found no secret patterns. Local source/build/archive/reachable-history scans include the new auth-key format and have zero unresolved findings; they cannot prove absence of arbitrary disguised credentials.
+- Credential incident: the first isolated key was accidentally exposed in tool output by an incomplete redaction rule. It was never deployed. The user replaced it; the old key is absent from refreshed inventory. The replacement value was transferred in memory without output and temporary state was cleared. This incident must not be described as “no credential ever appeared in conversation/tool output.”
+- Production read-only baselines remain unchanged: Pages `d26b3143-6454-4618-9a00-7b3df55d91ea`; legacy Worker version `a6117d3b-42c9-43b7-811c-0978e988815e`. No production credential was used in staging.
+
+### Outstanding release gates
+
+1. Resolve or accept Gemini free-tier availability risk, then rerun repeated hosted audits successfully. Current evidence is insufficient for reliable production operation. No new user credential action is required.
+2. Existing production operational gates remain: approved separate production provisioning/model selection, region/retention/provider data-use/backups, data-preserving rollback rehearsal, automatic deployment controls, and approved legacy cutover/key retirement. These require a separately approved production plan; they were not executed during staging work.
+3. Staging remains synthetic-data-only while provider data use and retention are unapproved. The old exposed key replacement is complete; cleanup of unused empty Google projects is optional and was not performed.
+
+The following entries are **historical investigation snapshots**, superseded by the final verification above. Earlier “pending”, “absent”, or “blocked” statements describe those earlier checkpoints, not current configuration.
 
 ## Current hosted checkpoint — 23 September 2026 (Sydney)
 
