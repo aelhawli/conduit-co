@@ -34,3 +34,11 @@ References checked 23 September 2026 (Sydney):
 - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite
 - https://ai.google.dev/gemini-api/docs/rate-limits
 - https://developers.cloudflare.com/workers/runtime-apis/request/
+
+## Staging model evaluation update
+
+The 3.8 baseline was stopped after **11 consecutive provider-backed audits**, including failures; it is not being represented as a completed 20-audit acceptance pass. Google AI Studio for actual staging project `gen-lang-client-0675067246` showed 3.8 limits of **5 RPM, 250K TPM, 20 RPD**, peak usage 7 RPM and 22 RPD, and an explicit quota warning. Retry calls count toward this budget. Diagnostics distinguish capacity 503s from subsequent 429 RESOURCE_EXHAUSTED daily-quota indicators.
+
+Google AI Studio showed stable **3.5 Flash-Lite** available at **15 RPM, 250K TPM and 500 RPD**. Staging was explicitly switched to `gemini-3.5-flash-lite` for a fresh, designated 20-consecutive-audit evaluation. No billing was enabled, no key/project changed, and production model configuration stayed unchanged. The reason is the documented PDF/document-parsing capability, lower latency, and adequate observed staging quota. This is a lighter model; responsiveness does not establish equal domain reasoning accuracy. Synthetic four/twelve-page outputs recognise seeded connection/fire-stopping uncertainty and schematic limitations; this is limited quality evidence, not an estimator benchmark.
+
+First seven candidate-model audits completed successfully on the first provider call, with seven persisted and unlocked synthetic leads. Audit 8 is prepared and waiting for human Turnstile verification. Final figures remain pending; the real Turnstile widget periodically requires user interaction.

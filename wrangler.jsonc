@@ -15,7 +15,7 @@
         "ENVIRONMENT": "staging",
         "ALLOWED_ORIGINS": "https://conduit-co-staging.pages.dev",
         "SUPABASE_URL": "https://kvujhszkrblaovnksafx.supabase.co",
-        "GEMINI_MODEL": "gemini-3.8-flash",
+        "GEMINI_MODEL": "gemini-3.5-flash-lite",
         "DAILY_AUDIT_LIMIT": "25"
       },
       "ratelimits": [
