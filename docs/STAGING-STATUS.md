@@ -1,5 +1,20 @@
 # Milestone 1 staging setup — blocked before acceptance
 
+## Current hosted checkpoint — 23 September 2026 (Sydney)
+
+Application HEAD: `e34f4a34921a399240a9a9c11c34c9b0740ab449`, following the approved `7ee197b` checkpoint on `codex/milestone-1-foundation`. The entries below this current summary retain the investigation history.
+
+- Frontend is live at https://conduit-co-staging.pages.dev, deployment `1385b2a7-de38-4eb6-9e5d-6ac0b8e12c73`. Its four public assets match the configured staging build byte-for-byte. Real Turnstile initialization, invalid-file rejection and safe error rendering were checked in the hosted browser.
+- Worker database adapter fix is deployed. Executable SHA-256: `19d72b481f463b10641273619a9df7cb9b4cf9c42f29b09baa245c111afadea2`. Real analytics HTTP requests now return 200 and persist in staging Supabase. Retrying event `d65a855c-8fd9-4d85-aa94-cf9347b9608c` leaves exactly one row.
+- All 20 hosted HTTP checks pass: health/preflight, exact CORS allowlist and rejection cases, unsupported lead enumeration, strict payload validation, real analytics persistence/retry, invalid lead/unknown audit, PDF validation/size enforcement, invalid Turnstile, rate-limit burst, and unauthorised database table/RPC access. These are not a substitute for the unfinished real Gemini/lead-gate journey.
+- Latest local verification: 74 automated unit/security/database/build tests and 10 mocked desktop/mobile browser tests pass; lint, strict types and staging build pass. Dependency audits report zero vulnerabilities. The 179 staging Worker log events returned for the preceding 24 hours contained no Gemini key, Supabase secret-key or JWT patterns; this is a bounded pattern scan, not proof about all logs.
+- Supabase project `kvujhszkrblaovnksafx` remains isolated staging. Both migrations remain intact. All 16 tables have RLS, with zero direct grants to browser roles or service_role; five controlled RPCs retain service-role-only execution. Security advisor reports 16 INFO entries for intentionally policy-free, deny-all tables, with no warning/error entries.
+- The user-created Gemini key labelled `Conduit-Staging` belonged to the same Google project as the existing Conduit key (`gen-lang-client-0862445008`). Removed only its binding from the staging Worker before running successful Gemini requests. Production resources and the Google key itself were left untouched.
+- Created and imported separate Google project `conduit-staging-509421` (number `81235774478`) and enabled its Gemini API. Billing remains unset/free tier. Key creation named `conduit-staging-gemini` was explicitly approved, but AI Studio rejected the attempt with “The request is suspicious. Please try again.” The prepared creation form is handed to the user for Google verification. No new key was confirmed created, and staging `GEMINI_API_KEY` remains absent pending that step. The other three Worker secrets are encrypted.
+- Remaining acceptance: isolated Gemini key transfer, real desktop/mobile PDF → analysis → preview → lead persistence → unlock, repeat uploads, final full validation and final secret/build/log checks. Production remains **NO-GO** until these pass and the release is explicitly approved.
+
+Read-only production baseline remains unchanged: Pages `conduit-co` deployment `d26b3143-6454-4618-9a00-7b3df55d91ea`; legacy Worker `withered-salad-c16e` version `a6117d3b-42c9-43b7-811c-0978e988815e`. No production deployment or Git push was performed.
+
 ## Checkpoint continuation — 23 September 2026 (Sydney)
 
 Resumed from approved checkpoint `7ee197bbaf999891f0a3867a0ffd64ed163ec88c`, on the existing branch. Live inspection found that Pages deployment `dae8f481-7e3f-49a2-b19e-5e6b2cf2eba3` and the staging Supabase secret had been added since the handoff below. The Supabase connector is now available; the existing project and both migration history entries were confirmed without repeating migrations.
