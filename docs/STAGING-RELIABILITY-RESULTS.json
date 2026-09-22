@@ -1,0 +1,693 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "stagingUrl": "https://conduit-co-staging.pages.dev",
+  "workerSha256": "4ab8f6ecd2efce6d30dc0041856a4988c602bd85a0956bf5fd1ce5085f4b1553",
+  "consecutive": true,
+  "summary": {
+    "audits": 20,
+    "successful": 20,
+    "firstAttemptSuccesses": 20,
+    "recovered": 0,
+    "finalFailures": 0,
+    "finalFailureRate": 0,
+    "retryRecoveryRate": null,
+    "retryRecoveryExplanation": "No final-model audit needed a retry; rate is not applicable (0/0). Baseline 3.8 recovered 1 of 6 retried audits.",
+    "providerMedianMs": 1923,
+    "providerWorstMs": 3412,
+    "apiMedianMs": 2353.5,
+    "apiWorstMs": 3721
+  },
+  "database": {
+    "jobs": 20,
+    "completed": 20,
+    "leads": 20,
+    "unlocked_leads": 20,
+    "consented_leads": 20,
+    "duplicate_lead_job_groups": 0,
+    "duplicate_job_event_groups": 0,
+    "upload_started_events": 20,
+    "event_counts": {
+      "audit_started": 20,
+      "upload_completed": 20,
+      "audit_completed": 20,
+      "audit_unlocked": 20,
+      "lead_form_displayed": 20,
+      "lead_captured": 20
+    },
+    "all_failed_jobs_with_leads": 0,
+    "usage": [
+      {
+        "usage_date": "2026-09-22",
+        "attempts": 40
+      }
+    ]
+  },
+  "limitations": [
+    "20 small synthetic vector PDFs across 3 fixtures; not a production SLA or exhaustive domain-quality benchmark.",
+    "API wall time is Cloudflare invocation time, excluding browser-to-edge upload latency and human form/Turnstile time.",
+    "Baseline Gemini 3.8 had 3/11 successes; all baseline failures are preserved separately.",
+    "Daily abuse cap restored to 25; test usage 40 blocks additional valid audits until 00:00 UTC reset."
+  ],
+  "results": [
+    {
+      "run": 1,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "3556fccf-ec33-44f5-bf10-60c456a5bbe9",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1927,
+      "apiWallTimeMs": 2585,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1927,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "3556fccf-ec33-44f5-bf10-60c456a5bbe9",
+        "status": "completed",
+        "started_at": "2026-09-22T22:21:41.824047+00:00",
+        "finished_at": "2026-09-22T22:21:43.912438+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 2,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "8b195ce7-f765-48a6-8a8d-ccb99cd81978",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 2262,
+      "apiWallTimeMs": 2723,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 2262,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "8b195ce7-f765-48a6-8a8d-ccb99cd81978",
+        "status": "completed",
+        "started_at": "2026-09-22T22:22:00.22597+00:00",
+        "finished_at": "2026-09-22T22:22:02.718329+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 3,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-mixed-services-12pages.pdf",
+        "pages": 12,
+        "bytes": 24087
+      },
+      "jobId": "e9b8757f-764e-4a50-b43a-f39f1fb97919",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 2210,
+      "apiWallTimeMs": 2507,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 2210,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "e9b8757f-764e-4a50-b43a-f39f1fb97919",
+        "status": "completed",
+        "started_at": "2026-09-22T22:22:30.333329+00:00",
+        "finished_at": "2026-09-22T22:22:32.683393+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 4,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "e766b766-1729-45d2-84af-3fec8c483951",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1783,
+      "apiWallTimeMs": 2353,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1783,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "e766b766-1729-45d2-84af-3fec8c483951",
+        "status": "completed",
+        "started_at": "2026-09-22T22:22:58.718558+00:00",
+        "finished_at": "2026-09-22T22:23:00.648998+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 5,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "daa6ad02-b1f9-431b-8e9d-cf456d70d5ea",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1854,
+      "apiWallTimeMs": 2426,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1854,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "daa6ad02-b1f9-431b-8e9d-cf456d70d5ea",
+        "status": "completed",
+        "started_at": "2026-09-22T22:25:19.054132+00:00",
+        "finished_at": "2026-09-22T22:25:21.06391+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 6,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-mixed-services-12pages.pdf",
+        "pages": 12,
+        "bytes": 24087
+      },
+      "jobId": "28fe058d-93d3-4453-88e1-38688af5d74f",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1841,
+      "apiWallTimeMs": 2121,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1841,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "28fe058d-93d3-4453-88e1-38688af5d74f",
+        "status": "completed",
+        "started_at": "2026-09-22T22:25:38.942567+00:00",
+        "finished_at": "2026-09-22T22:25:40.920472+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 7,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "b85c0670-1628-4153-9782-e544a9223230",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 2053,
+      "apiWallTimeMs": 2338,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 2053,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "b85c0670-1628-4153-9782-e544a9223230",
+        "status": "completed",
+        "started_at": "2026-09-22T22:26:11.0353+00:00",
+        "finished_at": "2026-09-22T22:26:13.22943+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 8,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "92738a0b-86ea-4329-919f-e77bbaef9df2",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1892,
+      "apiWallTimeMs": 2597,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1892,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "92738a0b-86ea-4329-919f-e77bbaef9df2",
+        "status": "completed",
+        "started_at": "2026-09-22T22:29:40.205713+00:00",
+        "finished_at": "2026-09-22T22:29:42.260497+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 9,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-mixed-services-12pages.pdf",
+        "pages": 12,
+        "bytes": 24087
+      },
+      "jobId": "cc7530fd-bae5-437b-b12d-36102263c266",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 2046,
+      "apiWallTimeMs": 2420,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 2046,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "cc7530fd-bae5-437b-b12d-36102263c266",
+        "status": "completed",
+        "started_at": "2026-09-22T22:30:22.015839+00:00",
+        "finished_at": "2026-09-22T22:30:24.218463+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 10,
+      "viewport": "desktop 1280x900",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "afb101f1-825f-435e-9461-043a83f2a53f",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1735,
+      "apiWallTimeMs": 2064,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1735,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "afb101f1-825f-435e-9461-043a83f2a53f",
+        "status": "completed",
+        "started_at": "2026-09-22T22:31:14.067709+00:00",
+        "finished_at": "2026-09-22T22:31:15.958848+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 11,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "9d86288f-54c1-4447-b0d0-91c1a79f7b2d",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1965,
+      "apiWallTimeMs": 2264,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1965,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "9d86288f-54c1-4447-b0d0-91c1a79f7b2d",
+        "status": "completed",
+        "started_at": "2026-09-22T22:32:24.130788+00:00",
+        "finished_at": "2026-09-22T22:32:26.239391+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 12,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-mixed-services-12pages.pdf",
+        "pages": 12,
+        "bytes": 24087
+      },
+      "jobId": "2c254e55-49ab-4644-a958-404c5bb0d5a1",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1919,
+      "apiWallTimeMs": 2233,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1919,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "2c254e55-49ab-4644-a958-404c5bb0d5a1",
+        "status": "completed",
+        "started_at": "2026-09-22T22:34:44.284651+00:00",
+        "finished_at": "2026-09-22T22:34:46.346013+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 13,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "fb3c889b-ae11-4ab5-b581-1409c9c94f6f",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1866,
+      "apiWallTimeMs": 2173,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1866,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "fb3c889b-ae11-4ab5-b581-1409c9c94f6f",
+        "status": "completed",
+        "started_at": "2026-09-22T22:35:29.723276+00:00",
+        "finished_at": "2026-09-22T22:35:31.728044+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 14,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "e6049e2b-f2ce-4d13-95d5-59e4bdd9cbf4",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 2147,
+      "apiWallTimeMs": 2451,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 2147,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "e6049e2b-f2ce-4d13-95d5-59e4bdd9cbf4",
+        "status": "completed",
+        "started_at": "2026-09-22T22:36:23.264553+00:00",
+        "finished_at": "2026-09-22T22:36:25.551837+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 15,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-mixed-services-12pages.pdf",
+        "pages": 12,
+        "bytes": 24087
+      },
+      "jobId": "69a75ca8-9c85-4a80-b381-bab573d718bf",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 2033,
+      "apiWallTimeMs": 2583,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 2033,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "69a75ca8-9c85-4a80-b381-bab573d718bf",
+        "status": "completed",
+        "started_at": "2026-09-22T22:37:18.977343+00:00",
+        "finished_at": "2026-09-22T22:37:21.150765+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 16,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "2c5a54b5-7ec2-4ed4-a445-c1ebceae4b3f",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1670,
+      "apiWallTimeMs": 1985,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1670,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "2c5a54b5-7ec2-4ed4-a445-c1ebceae4b3f",
+        "status": "completed",
+        "started_at": "2026-09-22T22:38:18.131554+00:00",
+        "finished_at": "2026-09-22T22:38:19.942152+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 17,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "4ea35a8b-d979-4f3e-bd77-1138bcf623ff",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1679,
+      "apiWallTimeMs": 1980,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1679,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "4ea35a8b-d979-4f3e-bd77-1138bcf623ff",
+        "status": "completed",
+        "started_at": "2026-09-22T22:39:09.206459+00:00",
+        "finished_at": "2026-09-22T22:39:11.025546+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 18,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-mixed-services-12pages.pdf",
+        "pages": 12,
+        "bytes": 24087
+      },
+      "jobId": "ea4bec4f-0c85-4f1e-bd6d-4240e9c1b675",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1995,
+      "apiWallTimeMs": 2354,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1995,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "ea4bec4f-0c85-4f1e-bd6d-4240e9c1b675",
+        "status": "completed",
+        "started_at": "2026-09-22T22:39:58.884521+00:00",
+        "finished_at": "2026-09-22T22:40:01.027226+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 19,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-staging-tender.pdf",
+        "pages": 1,
+        "bytes": 2617
+      },
+      "jobId": "c684e552-03c4-4379-a380-8e8f38bff44d",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 3412,
+      "apiWallTimeMs": 3721,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 3412,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "c684e552-03c4-4379-a380-8e8f38bff44d",
+        "status": "completed",
+        "started_at": "2026-09-22T22:40:52.577664+00:00",
+        "finished_at": "2026-09-22T22:40:56.131222+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    },
+    {
+      "run": 20,
+      "viewport": "mobile 390x844",
+      "fixture": {
+        "name": "synthetic-plumbing-4pages.pdf",
+        "pages": 4,
+        "bytes": 8662
+      },
+      "jobId": "dfb95785-da57-4892-9dc0-487cc6fba784",
+      "outcome": "success",
+      "attempts": 1,
+      "recovered": false,
+      "providerElapsedMs": 1774,
+      "apiWallTimeMs": 2093,
+      "apiStatus": 200,
+      "providerAttempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsedMs": 1774,
+          "outcome": "success"
+        }
+      ],
+      "database": {
+        "id": "dfb95785-da57-4892-9dc0-487cc6fba784",
+        "status": "completed",
+        "started_at": "2026-09-22T22:41:47.958229+00:00",
+        "finished_at": "2026-09-22T22:41:49.885573+00:00",
+        "lead_rows": 1,
+        "event_rows": 6
+      }
+    }
+  ]
+}

@@ -1,3 +1,19 @@
+# Current Milestone 1 checkpoint — staging reliability passed
+
+23 September 2026 (Sydney): **20/20 consecutive real hosted audits passed on stable Gemini 3.5 Flash-Lite**, including ten desktop and ten mobile upload-to-persisted-lead-to-unlock journeys. All twenty succeeded on their first provider call; zero duplicate jobs/leads/job-level events. API median 2.3535 seconds, worst 3.721 seconds. Bounded retry recovery/exhaustion was also verified in the prior 3.8 baseline and automated tests.
+
+**Production recommendation: CONDITIONAL GO, subject to separate production configuration and existing operational gates. No production deployment is authorised or performed.** No Milestone 2 work occurred.
+
+Current evidence and infrastructure: [STAGING-RELIABILITY.md](STAGING-RELIABILITY.md) and [STAGING-RELIABILITY-RESULTS.json](STAGING-RELIABILITY-RESULTS.json). These supersede the release status below; historical evidence is retained unchanged.
+
+Staging model is now `gemini-3.5-flash-lite`; Pages deployment `a99ac510-44be-4e5e-876b-6aeefebc3e3b`; Worker version `2f3949c2-d23e-4016-a235-9ae873f9c19d`. All staging-only credentials, CORS, Turnstile and RLS protections remain. 104 automated tests, 12 browser tests and 20 final hosted security checks pass; dependency audits have no known vulnerabilities.
+
+The daily cap is restored to 25 after testing used 40 attempts today. Further valid staging uploads are intentionally blocked until 23 September 00:00 UTC (10:00 am Sydney); no usage history was cleared.
+
+---
+
+# Historical checkpoints (superseded)
+
 # Milestone 1 staging — hosted success with provider reliability issue
 
 ## Final verification — 23 September 2026 (Sydney)
