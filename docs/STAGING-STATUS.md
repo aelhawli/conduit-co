@@ -2,6 +2,10 @@
 
 ## Current hosted checkpoint — 23 September 2026 (Sydney)
 
+### Credential handoff update
+
+The user subsequently created `conduit-staging-gemini` in a second isolated Google project: actual ID `gen-lang-client-0948341518`, number `127854019232`, display name `conduit-staging-509421`. This differs from the unused Console-created project ID below. During verification, the browser-output redaction covered legacy Google key syntax but missed the new authorization-key format, exposing the new staging key in tool output. It was not deployed. Temporary clipboard and in-memory transfer values were cleared. The user was asked to revoke that key (suffix `sCwQ`) and create `conduit-staging-gemini-v2` in the same isolated project; replacement remains pending. Do not use the exposed key. The local release scanner now also checks the new key format and reports zero unresolved findings in source/build/archive/reachable Git history; this does not erase the tool-output exposure. Hosted acceptance remains blocked pending replacement.
+
 Application HEAD: `e34f4a34921a399240a9a9c11c34c9b0740ab449`, following the approved `7ee197b` checkpoint on `codex/milestone-1-foundation`. The entries below this current summary retain the investigation history.
 
 - Frontend is live at https://conduit-co-staging.pages.dev, deployment `1385b2a7-de38-4eb6-9e5d-6ac0b8e12c73`. Its four public assets match the configured staging build byte-for-byte. Real Turnstile initialization, invalid-file rejection and safe error rendering were checked in the hosted browser.
