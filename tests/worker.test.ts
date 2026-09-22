@@ -132,6 +132,17 @@ describe('Audit and lead persistence', () => {
   it('records no successful completion if persistence fails', async () => {
     vi.mocked(db.completeJob).mockRejectedValue(new Error('database offline')); const r = await run(request('/api/audits',auditBody())); expect(r.status).toBe(503); expect(db.failJob).toHaveBeenCalled();
   });
+  it('logs only status for provider HTTP failures, without reading the private body', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      fetcher.mockImplementation(async input => String(input).includes('siteverify') ? Response.json({success:true,hostname:'conduitco.io',action:'audit'}) : new Response('private provider body containing credentials', {status:429}));
+      const r = await run(request('/api/audits',auditBody()));
+      expect(r.status).toBe(502);
+      expect(warn).toHaveBeenCalledWith(JSON.stringify({event:'gemini_http_error',status:429}));
+      expect(JSON.stringify(warn.mock.calls)).not.toContain('credentials');
+      expect(await r.text()).not.toContain('private provider');
+    } finally { warn.mockRestore(); }
+  });
   it('records allowlisted client events without arbitrary properties', async () => {
     const body = {eventId:job, sessionId:sid,name:'landing_page_visit'};
     expect((await run(request('/api/events',body))).status).toBe(200);

@@ -21,7 +21,11 @@ export async function analysePdf(pdfBase64: string, env: { GEMINI_API_KEY: strin
         } }
       })
     });
-    if (!response.ok) throw unavailable();
+    if (!response.ok) {
+      // Log only numeric status, never provider bodies, headers, URLs or keys.
+      console.warn(JSON.stringify({ event: 'gemini_http_error', status: response.status }));
+      throw unavailable();
+    }
     // Provider output is bounded separately from the upload.
     const { readJson } = await import('./http');
     const payload = await readJson(new Request('https://internal.invalid', { method: 'POST', headers: { 'content-type': 'application/json' }, body: response.body, duplex: 'half' } as RequestInit), 128 * 1024);
