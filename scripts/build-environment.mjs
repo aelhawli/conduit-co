@@ -1,6 +1,6 @@
 // Changing an API destination requires a reviewed source change, not a build-variable override.
 export const apiOrigins = Object.freeze({
-  staging: 'https://conduit-api-staging.letstalk.workers.dev',
+  staging: 'https://conduit-api-staging.letstalk-531.workers.dev',
   production: 'https://conduit-api-production.letstalk.workers.dev',
   test: 'http://127.0.0.1:8787'
 });
