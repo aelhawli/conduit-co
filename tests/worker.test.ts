@@ -142,4 +142,12 @@ describe('Audit and lead persistence', () => {
     const adapter = new SupabaseDatabase(env,vi.fn().mockResolvedValue(new Response('secret db contents',{status:500})));
     await expect(adapter.startJob(job,'a'.repeat(64),sid)).rejects.toMatchObject({code:'SERVICE_UNAVAILABLE'});
   });
+  it('calls the platform fetch without a database instance receiver', async () => {
+    const nativeLikeFetch: typeof fetch = async function (this: unknown) {
+      if (this !== undefined) throw new TypeError('Illegal invocation');
+      return Response.json(true);
+    };
+    const adapter = new SupabaseDatabase(env, nativeLikeFetch);
+    await expect(adapter.recordEvent({ eventId: job, sessionId: sid, name: 'landing_page_visit' })).resolves.toBeUndefined();
+  });
 });

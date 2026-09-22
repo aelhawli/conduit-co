@@ -15,7 +15,9 @@ export class SupabaseDatabase implements Database {
   private async rpc(name: string, args: Record<string, unknown>): Promise<unknown> {
     if (!this.env.SUPABASE_URL || !this.env.SUPABASE_SERVICE_ROLE_KEY) throw unavailable();
     try {
-      const response = await this.fetcher(`${this.env.SUPABASE_URL}/rest/v1/rpc/${name}`, {
+      // Workers' native fetch rejects a database instance as its `this` receiver.
+      const fetcher = this.fetcher;
+      const response = await fetcher(`${this.env.SUPABASE_URL}/rest/v1/rpc/${name}`, {
         method: 'POST', headers: { apikey: this.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${this.env.SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(args), signal: AbortSignal.timeout(10000)
       });

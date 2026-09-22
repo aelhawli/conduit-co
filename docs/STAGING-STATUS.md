@@ -10,6 +10,12 @@ After these fixes: 73 automated tests and 10 desktop/mobile browser tests pass; 
 
 The entries below are historical; the current hosted workflow remains incomplete until the outstanding connectivity and browser checks pass.
 
+### Hosted fixes and connectivity diagnosis
+
+Frontend deployment `1385b2a7-de38-4eb6-9e5d-6ac0b8e12c73` publishes the fixed Turnstile container from commit `2fc6617`. The real widget initializes and displays success; invalid-file rejection and safe server-error rendering were exercised in the hosted browser. The user supplied a staging Gemini binding; it was converted from plaintext to `secret_text` entirely inside the connected Cloudflare operation, with no value printed or saved. The staging Supabase service-role key was transferred directly between the signed-in staging dashboard and the staging Worker secret editor, with temporary clipboard data cleared.
+
+Database requests still failed after this transfer. A local Cloudflare runtime probe reproduced the cause: `holder.fetcher = fetch; holder.fetcher(...)` throws `Illegal invocation: function called with incorrect this reference`, while a standalone invocation returns HTTP 200. The database adapter called its injected native fetch as an instance method. It now assigns that function to a local variable before calling it. A receiver-sensitive regression test covers this behavior; 74 automated tests, lint and strict TypeScript checks pass. Hosted database acceptance will be rerun after the corresponding staging Worker deployment.
+
 22 September 2026. Started from release candidate `d1c6eda`. Staging setup is partial; the full hosted acceptance suite has **not** passed. Production recommendation: **NO-GO until staging acceptance is completed**.
 
 ## 1. Staging URLs
