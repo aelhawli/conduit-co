@@ -33,7 +33,7 @@ async function ensureMultipart(v:Version,db:IngestionDatabase,store:IngestionSto
  }catch(e){try{await store.abort({...v,upload:{multipart_id:created,state:'UPLOADING',part_digests:{},expires_at:''}});}catch{/* R2 lifecycle aborts abandoned multipart uploads */}throw e;}
 }
 export async function handleIngestion(request:Request,env:IngestionEnv):Promise<Response>{
- let origin:string|undefined;
+ let origin:string|undefined,stage='configuration';
  try{
   if(env.ENVIRONMENT!=='staging')throw new Error('ENVIRONMENT_MISMATCH');
   const path=new URL(request.url).pathname;
@@ -67,8 +67,9 @@ export async function handleIngestion(request:Request,env:IngestionEnv):Promise<
   }
   if(request.method!=='POST')return json({error:'METHOD_NOT_ALLOWED'},405,origin);
   const ip=request.headers.get('CF-Connecting-IP');if(!ip||env.RATE_LIMIT_SALT.length<32)throw new Error('CONFIGURATION_ERROR');
+  stage='rate_limit';
   if(!(await env.CONTROL_LIMITER.limit({key:await hash(env.RATE_LIMIT_SALT+':'+ip)})).success)return json({error:'RATE_LIMITED',message:'Please wait a minute and try again.'},429,origin);
-  const token=request.headers.get('Authorization')?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1];if(!token)throw new Error('UNAUTHENTICATED');await db.authenticate(token);
+  const token=request.headers.get('Authorization')?.match(/^Bearer ([A-Za-z0-9_.-]+)$/)?.[1];if(!token)throw new Error('UNAUTHENTICATED');stage='authentication';await db.authenticate(token);stage='operation';
   const {action,data}=controlSchema.parse(await readJson(request,8192));
   if(['organisations','projects'].includes(action))return json(await db.rpc(action,{},token),200,origin);
   if(action==='create_project'){const p=z.object({id:uuid,organisation_id:uuid,name:z.string().trim().min(1).max(240)}).strict().parse(data);return json(await db.rpc(action,p,token),200,origin);}
@@ -105,6 +106,7 @@ export async function handleIngestion(request:Request,env:IngestionEnv):Promise<
   const raw=e instanceof Error?e.message:'';const known=['UNAUTHENTICATED','FORBIDDEN','PROJECT_LIMIT','INVALID_FILE','INVALID_PART','FILE_CHANGED','UPLOAD_CLOSED','CANCELLED','IDEMPOTENCY_CONFLICT','INCOMPLETE_UPLOAD','SOURCE_NOT_AVAILABLE','SIZE_MISMATCH','STALE_LEASE'];
   if(e instanceof AppError&&e.code==='VERIFICATION_FAILED')return json({error:e.code,message:'Please complete the security check again.'},403,origin);
   const code=e instanceof z.ZodError?'INVALID_REQUEST':known.includes(raw)?raw:'SERVICE_UNAVAILABLE';
+  if(code==='SERVICE_UNAVAILABLE')console.warn(JSON.stringify({event:'ingestion_request_failure',stage,errorType:e instanceof Error?e.name:'unknown',code:/^[A-Z_]{1,64}$/.test(raw)?raw:'UNEXPECTED'}));
   const status=code==='UNAUTHENTICATED'?401:code==='FORBIDDEN'?403:code==='SERVICE_UNAVAILABLE'?503:409;
   return json({error:code,message:code==='SERVICE_UNAVAILABLE'?'The service is temporarily unavailable. Your saved upload can be resumed.':code.replaceAll('_',' ').toLowerCase()},status,origin);
  }
