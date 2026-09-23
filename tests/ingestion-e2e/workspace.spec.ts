@@ -53,3 +53,11 @@ test('permanent preparation failure explains how to recover without unlocking an
  await expect(page.getByRole('button',{name:'Download original PDF'})).toHaveCount(0);
 });
 
+
+test('denied tender is hidden with a clear access message',async({page})=>{
+ await setup(page);await page.route('https://conduit-ingestion-staging.letstalk-531.workers.dev/control',async r=>{
+  const {action}=r.request().postDataJSON();
+  if(action==='project')await r.fulfill({status:403,json:{error:'FORBIDDEN',message:'forbidden'}});else await r.fallback();
+ });
+ await page.reload();await expect(page.locator('#message')).toContainText('You do not have access');await expect(page.locator('#tender')).toBeHidden();
+});

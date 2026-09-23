@@ -12,11 +12,11 @@ function message(text:string){$('message').textContent=text;}
 async function api<T>(action:string,data:Record<string,unknown>={}):Promise<T>{
  const {data:{session}}=await client.auth.getSession();if(!session)throw new Error('Please sign in again. Your tender is saved.');
  const response=await fetch(STAGING_API+'/control',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action,data}),signal:AbortSignal.timeout(45000)});
- const body=await response.json();if(!response.ok)throw new Error(body.message??'Request failed. Please try again.');return body as T;
+ const body=await response.json();if(!response.ok)throw new Error(response.status===403?'You do not have access to this tender. Choose a tender from your organisation.':body.message??'Request failed. Please try again.');return body as T;
 }
 function button(text:string,run:()=>Promise<void>){const b=document.createElement('button');b.textContent=text;b.onclick=()=>{b.disabled=true;void run().catch(e=>message(e instanceof Error?e.message:'Request failed.')).finally(()=>{b.disabled=false;});};return b;}
 async function loadProjects(){const rows=await api<{id:string;name:string}[]>('projects');$('projects').replaceChildren(...rows.map(p=>button(p.name,()=>openProject(p.id))));}
-async function openProject(id:string){if(uploading)throw new Error('Pause the current upload before opening another tender.');projectId=id;location.hash=id;await refreshProject();$('tender').hidden=false;}
+async function openProject(id:string){if(uploading)throw new Error('Pause the current upload before opening another tender.');projectId=id;location.hash=id;try{await refreshProject();$('tender').hidden=false;}catch(e){projectId='';location.hash='';$('tender').hidden=true;message((e as Error).message);}}
 async function refreshProject(){
  if(!projectId)return;
  const p=await api<{name:string;reserved_bytes:number;documents:(Version&{original_filename:string;version:number;duplicate_of:string|null;job?:{state:string;pages_prepared:number;error_code:string|null}})[]}>('project',{project_id:projectId});
@@ -69,7 +69,7 @@ async function upload(file:File){
  }
  await api('complete',{project_id:projectId,version_id:v.id});localStorage.removeItem(storageKey);$('upload-label').textContent=`Upload complete: ${file.name}`;message('Upload received. Processing continues if you close this page.');await refreshProject();
 }
-$<HTMLFormElement>('login').onsubmit=async e=>{e.preventDefault();const r=await client.auth.signInWithPassword({email:$<HTMLInputElement>('email').value,password:$<HTMLInputElement>('password').value});$<HTMLInputElement>('password').value='';if(r.error)message('Sign-in failed. Check your invited account details.');else await start();};
+$<HTMLFormElement>('login').onsubmit=async e=>{e.preventDefault();const r=await client.auth.signInWithPassword({email:$<HTMLInputElement>('email').value,password:$<HTMLInputElement>('password').value});$<HTMLInputElement>('password').value='';if(r.error)message('Sign-in failed. Check your invited account details.');else try{await start();}catch(e){message((e as Error).message);}};
 $<HTMLFormElement>('create').onsubmit=async e=>{e.preventDefault();if(uploading){message('Pause the current upload before creating another tender.');return;}try{const p=await api<{id:string}>('create_project',{id:crypto.randomUUID(),organisation_id:$<HTMLSelectElement>('organisation').value,name:$<HTMLInputElement>('project-name').value});await loadProjects();await openProject(p.id);}catch(e){message((e as Error).message);}};
 $('logout').onclick=async()=>{paused=true;activeXHR?.abort();await client.auth.signOut();for(const key of Object.keys(localStorage))if(key.startsWith('conduit-upload:'))localStorage.removeItem(key);location.reload();};
 $<HTMLInputElement>('files').onchange=e=>{files=Array.from((e.target as HTMLInputElement).files??[]);message(`${files.length} PDFs selected.`);};
