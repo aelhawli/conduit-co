@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import {Container} from '@cloudflare/containers';
+export {ContainerProxy} from '@cloudflare/containers';
 import {IngestionDatabase,type DatabaseEnv} from './database';
 import {IngestionStorage,type StorageEnv} from './storage';
 import {STAGING_API,STAGING_ORIGIN,controlSchema,reserveSchema,versionSchema,partSchema,uuid,type Version,type Job} from './contracts';
@@ -11,7 +12,7 @@ interface IngestionEnv extends Pick<IngestionBindings,'ENVIRONMENT'|'CONTROL_LIM
  TURNSTILE_SECRET_KEY:string;PROCESSOR_SIGNING_KEY:string;RATE_LIMIT_SALT:string;
 }
 export class PdfProcessor extends Container{
- defaultPort=8080;sleepAfter='30s';
+ defaultPort=8080;sleepAfter='30s';enableInternet=false;interceptHttps=true;
  allowedHosts=['531521b13c35aabe7b97954af0e2169b.r2.cloudflarestorage.com','conduit-ingestion-staging.letstalk-531.workers.dev'];
 }
 async function callbackToken(env:IngestionEnv,versionId:string,lease:string){

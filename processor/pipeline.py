@@ -5,6 +5,7 @@ import io
 import json
 import math
 import os
+import ssl
 from pathlib import Path
 import sys
 import urllib.request
@@ -28,12 +29,22 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         raise Rejected('PROCESSOR_UNAVAILABLE')
 
 
+def opener():
+    context = ssl.create_default_context()
+    # Trust Cloudflare's per-container egress CA in addition to system roots;
+    # TLS hostname and chain verification remain enabled.
+    ca = Path('/etc/cloudflare/certs/cloudflare-containers-ca.crt')
+    if ca.exists():
+        context.load_verify_locations(cafile=str(ca))
+    return urllib.request.build_opener(NoRedirect, urllib.request.HTTPSHandler(context=context))
+
+
 def callback(config, action, data):
     if config['callback_url'] != CALLBACK:
         raise Rejected('PROCESSOR_UNAVAILABLE')
     body = json.dumps({'version_id': config['version_id'], 'lease_token': config['lease_token'], 'action': action, 'data': data}).encode()
     req = urllib.request.Request(CALLBACK, data=body, headers={'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config['callback_token']})
-    with urllib.request.build_opener(NoRedirect).open(req, timeout=25) as response:
+    with opener().open(req, timeout=25) as response:
         if response.status != 200:
             raise Rejected('PROCESSOR_UNAVAILABLE')
 
@@ -47,7 +58,7 @@ def download(config, target):
         raise Rejected('SIZE_MISMATCH')
     digest = hashlib.sha256()
     size = 0
-    with urllib.request.build_opener(NoRedirect).open(config['source_url'], timeout=30) as response, open(target, 'wb') as output:
+    with opener().open(config['source_url'], timeout=30) as response, open(target, 'wb') as output:
         while chunk := response.read(1024 * 1024):
             size += len(chunk)
             if size > expected:
