@@ -8,12 +8,16 @@ import {readJson,json} from '../worker/http';
 import {checkTurnstile,hash} from '../worker/security';
 import {AppError} from '../worker/errors';
 
-interface IngestionEnv extends Pick<IngestionBindings,'ENVIRONMENT'|'CONTROL_LIMITER'|'JOB_QUEUE'|'PDF_PROCESSOR'>,DatabaseEnv,StorageEnv{
+interface IngestionEnv extends Pick<IngestionBindings,'ENVIRONMENT'|'CONTROL_LIMITER'|'JOB_QUEUE'|'PDF_PROCESSOR'|'SOURCE_RETENTION_DAYS'|'DERIVED_RETENTION_DAYS'>,DatabaseEnv,StorageEnv{
  TURNSTILE_SECRET_KEY:string;PROCESSOR_SIGNING_KEY:string;RATE_LIMIT_SALT:string;
 }
 export class PdfProcessor extends Container{
  defaultPort=8080;sleepAfter='30s';enableInternet=false;interceptHttps=true;
  allowedHosts=['531521b13c35aabe7b97954af0e2169b.r2.cloudflarestorage.com','conduit-ingestion-staging.letstalk-531.workers.dev'];
+}
+export function retentionDays(source:unknown,derived:unknown){
+ const days=z.coerce.number().int().min(1).max(365);const source_days=days.parse(source),derived_days=days.parse(derived);
+ if(derived_days<source_days)throw new Error('CONFIGURATION_ERROR');return {source_days,derived_days};
 }
 async function callbackToken(env:IngestionEnv,versionId:string,lease:string){
  if(env.PROCESSOR_SIGNING_KEY.length<32)throw new Error('CONFIGURATION_ERROR');
@@ -25,12 +29,16 @@ const callbackSchema=z.object({version_id:uuid,lease_token:uuid,action:z.enum(['
 const pageSchema=z.object({page_number:z.number().int().min(1).max(2000),width_points:z.number().positive().max(14400),height_points:z.number().positive().max(14400),text:z.string().max(100000),image_base64:z.string().max(3_000_000).optional()}).strict();
 async function ensureMultipart(v:Version,db:IngestionDatabase,store:IngestionStorage){
  if(v.upload?.multipart_id||v.state!=='UPLOADING')return v;
- const created=await store.initiate(v);
+ let created:string;
+ try{created=await store.initiate(v);}catch(e){await recordUploadFailure(db,v.id);throw e;}
  try{
   const saved=await db.rpc<NonNullable<Version['upload']>>('multipart',{version_id:v.id,multipart_id:created});
   if(saved.multipart_id!==created)await store.abort({...v,upload:{...saved,multipart_id:created}});
   return {...v,upload:saved};
  }catch(e){try{await store.abort({...v,upload:{multipart_id:created,state:'UPLOADING',part_digests:{},expires_at:''}});}catch{/* R2 lifecycle aborts abandoned multipart uploads */}throw e;}
+}
+async function recordUploadFailure(db:IngestionDatabase,versionId:string){
+ try{await db.rpc('upload_failed',{version_id:versionId});}catch{/* telemetry must not prevent upload recovery */}
 }
 export async function handleIngestion(request:Request,env:IngestionEnv):Promise<Response>{
  let origin:string|undefined,stage='configuration';
@@ -53,7 +61,7 @@ export async function handleIngestion(request:Request,env:IngestionEnv):Promise<
     await db.rpc('page',{...payload,page_number:page.page_number,width_points:page.width_points,height_points:page.height_points,text_characters:page.text.length,text_object_key:prefix+'.txt',image_object_key:imageKey});
    }else{
     const data=body.action==='validated'?z.object({page_count:z.number().int().min(1).max(2000),sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict().parse(body.data)
-     :body.action==='failed'?z.object({error_code:z.enum(['INVALID_PDF','ENCRYPTED_PDF','CORRUPT_PDF','PAGE_LIMIT','PAGE_DIMENSIONS','OUTPUT_LIMIT','SIZE_MISMATCH','PROCESSOR_TIMEOUT','PROCESSOR_UNAVAILABLE']),retryable:z.boolean()}).strict().parse(body.data):{};
+     :body.action==='failed'?z.object({error_code:z.enum(['INVALID_PDF','ENCRYPTED_PDF','CORRUPT_PDF','PAGE_LIMIT','PAGE_DIMENSIONS','OUTPUT_LIMIT','SIZE_MISMATCH','PROCESSOR_TIMEOUT','PROCESSOR_UNAVAILABLE']),retryable:z.boolean()}).strict().parse(body.data):retentionDays(env.SOURCE_RETENTION_DAYS,env.DERIVED_RETENTION_DAYS);
     await db.rpc(body.action,{...payload,...data});
    }
    return json({ok:true},200);
@@ -93,7 +101,7 @@ export async function handleIngestion(request:Request,env:IngestionEnv):Promise<
    if(v.state==='UPLOADING'){
     await db.rpc('completing',{version_id:v.id});
     try{const bytes=await store.complete(v);await db.rpc('uploaded',{version_id:v.id,actual_bytes:bytes});}
-    catch(e){if(e instanceof Error&&e.message==='INCOMPLETE_UPLOAD')await db.rpc('reopen',{version_id:v.id});throw e;}
+    catch(e){await recordUploadFailure(db,v.id);if(e instanceof Error&&e.message==='INCOMPLETE_UPLOAD')await db.rpc('reopen',{version_id:v.id});throw e;}
    }
    // Durable DB job is the outbox; cron recovers a failed queue send.
    try{await env.JOB_QUEUE.send({versionId:v.id});}catch{console.warn(JSON.stringify({event:'ingestion_dispatch_deferred',versionId:v.id}));}
@@ -105,6 +113,7 @@ export async function handleIngestion(request:Request,env:IngestionEnv):Promise<
  }catch(e){
   const raw=e instanceof Error?e.message:'';const known=['UNAUTHENTICATED','FORBIDDEN','PROJECT_LIMIT','INVALID_FILE','INVALID_PART','FILE_CHANGED','UPLOAD_CLOSED','CANCELLED','IDEMPOTENCY_CONFLICT','INCOMPLETE_UPLOAD','SOURCE_NOT_AVAILABLE','SIZE_MISMATCH','STALE_LEASE'];
   if(e instanceof AppError&&e.code==='VERIFICATION_FAILED')return json({error:e.code,message:'Please complete the security check again.'},403,origin);
+  if(e instanceof AppError&&e.status<500)return json({error:e.code,message:e.status===413?'The upload control request is too large. Select the PDF again.':'The request could not be read. Please try again.'},e.status,origin);
   const code=e instanceof z.ZodError?'INVALID_REQUEST':known.includes(raw)?raw:'SERVICE_UNAVAILABLE';
   if(code==='SERVICE_UNAVAILABLE')console.warn(JSON.stringify({event:'ingestion_request_failure',stage,errorType:e instanceof Error?e.name:'unknown',code:/^[A-Z_]{1,64}$/.test(raw)?raw:'UNEXPECTED'}));
   const status=code==='UNAUTHENTICATED'?401:code==='FORBIDDEN'?403:code==='SERVICE_UNAVAILABLE'?503:409;

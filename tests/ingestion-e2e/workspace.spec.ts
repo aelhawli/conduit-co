@@ -3,7 +3,7 @@ const org='10000000-0000-4000-8000-000000000001',project='20000000-0000-4000-800
 const pdf={name:'synthetic.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nSynthetic transport fixture\n%%EOF')};
 async function setup(page:Page){
  const calls:{action:string;data:Record<string,unknown>}[]=[],parts:Buffer[]=[];
- const v={id:version,document_id:version,project_id:project,organisation_id:org,original_filename:pdf.name,declared_bytes:pdf.buffer.length,state:'UPLOADING',version:1,page_count:2,source_deleted_at:null,upload:{multipart_id:'synthetic',state:'UPLOADING',part_digests:{},expires_at:new Date(Date.now()+86400000).toISOString()},job:{state:'PROCESSING',pages_prepared:1,error_code:null},fingerprint:''};
+ const v={id:version,document_id:version,project_id:project,organisation_id:org,original_filename:pdf.name,declared_bytes:pdf.buffer.length,state:'UPLOADING',version:1,page_count:2,source_deleted_at:null,upload:{multipart_id:'synthetic',state:'UPLOADING',part_digests:{},expires_at:new Date(Date.now()+86400000).toISOString()},job:{state:'PROCESSING',pages_prepared:1,error_code:null as string|null},fingerprint:''};
  let reserved=false;
  await page.addInitScript(({org})=>{
   const exp=Math.floor(Date.now()/1000)+3600;const user={id:org,aud:'authenticated',role:'authenticated',email:'synthetic@example.invalid',app_metadata:{provider:'email'},user_metadata:{},created_at:new Date().toISOString()};
@@ -42,5 +42,14 @@ test('idempotent reservation result does not duplicate storage uploads or comple
  // The mock intentionally returns the previously received version on the second reservation.
  // The browser must not upload or create another job for that idempotent result.
  expect(state.parts).toHaveLength(1);expect(state.calls.filter(c=>c.action==='complete')).toHaveLength(1);
+});
+
+
+test('permanent preparation failure explains how to recover without unlocking analysis',async({page})=>{
+ const state=await setup(page);await page.locator('#files').setInputFiles(pdf);await page.locator('#upload').click();
+ await expect(page.locator('#upload-label')).toContainText('Upload complete:');
+ state.v.state='FAILED';state.v.job.error_code='ENCRYPTED_PDF';await page.reload();
+ await expect(page.locator('#documents')).toContainText('Upload an unlocked copy');
+ await expect(page.getByRole('button',{name:'Download original PDF'})).toHaveCount(0);
 });
 

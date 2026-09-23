@@ -14,7 +14,7 @@ const reservation=(overrides:Record<string,unknown>={})=>({project_id:project,fi
 beforeAll(async()=>{
  db=new PGlite();
  await db.exec("create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to anon,authenticated,service_role;");
- for(const name of ['202609220001_foundation.sql','202609220002_funnel_functions.sql','20260923214709_ingestion_foundation.sql']) await db.exec(await readFile('supabase/migrations/'+name,'utf8'));
+ for(const name of ['202609220001_foundation.sql','202609220002_funnel_functions.sql','20260923214709_ingestion_foundation.sql','20260923231853_ingestion_cleanup_metrics.sql']) await db.exec(await readFile('supabase/migrations/'+name,'utf8'));
  for(const uid of [alice,bob]){await db.query('insert into auth.users values($1)',[uid]);await db.query('insert into public.users(id) values($1)',[uid]);}
  await db.query("insert into public.organisations(id,name) values($1,'Tenant A'),($2,'Tenant B')",[org,other]);
  await db.query("insert into public.memberships(organisation_id,user_id,role) values($1,$2,'owner'),($3,$4,'owner')",[org,alice,other,bob]);
@@ -129,5 +129,28 @@ describe('M2 tenant and reservation boundary',()=>{
   const bp=crypto.randomUUID();await api('create_project',{id:bp,organisation_id:other,name:'Tenant B tender'});
   await asUser(alice);const p=await api('project',{project_id:project});const doc=(p.documents as {document_id:string}[])[0]!.document_id;
   await asUser(bob);await expect(api('reserve',reservation({project_id:bp,document_id:doc}))).rejects.toThrow();
+ });
+});
+
+describe('M2 cleanup and failure accounting',()=>{
+ it('counts server-observed transfer failures once without closing resumable uploads',async()=>{
+  const ids=await newVersion();await internal('upload_failed',ids);await internal('upload_failed',ids);
+  expect((await internal('read',ids)).state).toBe('UPLOADING');await db.exec('reset role');
+  const r=await db.query<{n:number}>("select count(*)::int n from public.ingestion_metrics where version_id=$1 and name='upload_failed'",[ids.version_id]);expect(r.rows[0]!.n).toBe(1);
+ });
+ it('scrubs parent filename only after every revision is cleaned',async()=>{
+  const ids=await newVersion();const v=await internal('read',ids);await asUser(alice);
+  const next=await api('reserve',reservation({project_id:ids.project_id,document_id:v.document_id,byte_size:1000}));
+  await api('cancel',ids);await internal('cleaned',ids);await db.exec('reset role');
+  const filename=async()=> (await db.query<{filename:string}>('select filename from public.documents where id=$1',[v.document_id])).rows[0]!.filename;
+  expect(await filename()).toBe('Generated test.pdf');await asUser(alice);
+  await api('cancel',{project_id:ids.project_id,version_id:next.id});await internal('cleaned',{version_id:next.id});await db.exec('reset role');
+  expect(await filename()).toBe('[deleted]');
+ });
+ it('counts expired-lease recovery as a processing retry',async()=>{
+  const ids=await uploaded();await internal('claim',ids);await db.exec('reset role');
+  await db.query("update public.ingestion_jobs set lease_until=now()-interval '1 second' where version_id=$1",[ids.version_id]);
+  expect((await internal('claim',ids)).attempt).toBe(2);await db.exec('reset role');
+  const r=await db.query<{n:number}>("select count(*)::int n from public.ingestion_metrics where version_id=$1 and name='processing_retry'",[ids.version_id]);expect(r.rows[0]!.n).toBe(1);
  });
 });

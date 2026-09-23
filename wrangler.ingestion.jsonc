@@ -8,9 +8,11 @@
  "compatibility_flags":["nodejs_compat"],
  "workers_dev":true,
  "preview_urls":false,
- "observability":{"enabled":true,"head_sampling_rate":1},
+ "observability":{"enabled":true,"head_sampling_rate":1,"redact_query_string":true},
  "vars":{
   "ENVIRONMENT":"staging",
+  "SOURCE_RETENTION_DAYS":"30",
+  "DERIVED_RETENTION_DAYS":"90",
   "SUPABASE_URL":"https://kvujhszkrblaovnksafx.supabase.co",
   "SUPABASE_PUBLISHABLE_KEY":"sb_publishable_TBH5eXkpm9katjkvVjuH7w_puxgL5et",
   "R2_ACCOUNT_ID":"531521b13c35aabe7b97954af0e2169b",
