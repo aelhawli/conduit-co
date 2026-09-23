@@ -8,6 +8,8 @@
     "node": ">=22 <25"
   },
   "scripts": {
+    "ingestion:build": "node scripts/build-ingestion.mjs",
+    "ingestion:deploy": "node scripts/deploy-ingestion.mjs",
     "build": "node scripts/build.mjs staging",
     "build:production": "node scripts/build.mjs production",
     "build:test": "node scripts/build.mjs test",
@@ -22,6 +24,11 @@
     "dev:api": "wrangler dev --env staging --local"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1138.0",
+    "@aws-sdk/s3-request-presigner": "3.1138.0",
+    "@cloudflare/containers": "0.3.7",
+    "@supabase/supabase-js": "2.117.1",
+    "hash-wasm": "4.12.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -34,6 +41,7 @@
     "esbuild-wasm": "0.28.2",
     "eslint": "10.11.0",
     "jsdom": "30.1.0",
+    "supabase": "2.117.0",
     "tailwindcss": "3.4.17",
     "typescript": "5.9.3",
     "typescript-eslint": "8.70.0",

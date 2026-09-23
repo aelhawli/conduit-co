@@ -11,3 +11,5 @@ playwright-report/
 *.log
 .supabase/
 supabase/.temp/
+__pycache__/
+*.pyc
