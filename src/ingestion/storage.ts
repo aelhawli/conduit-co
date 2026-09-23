@@ -1,4 +1,5 @@
 import {S3Client,CreateMultipartUploadCommand,UploadPartCommand,ListPartsCommand,CompleteMultipartUploadCommand,HeadObjectCommand,AbortMultipartUploadCommand,GetObjectCommand,DeleteObjectCommand,ListObjectsV2Command,PutObjectCommand} from '@aws-sdk/client-s3';
+import {FetchHttpHandler,streamCollector} from '@smithy/fetch-http-handler';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
 import {PART_BYTES,partSize,type Version} from './contracts';
 export interface StorageEnv{R2_ACCESS_KEY_ID:string;R2_SECRET_ACCESS_KEY:string;R2_ACCOUNT_ID:string;R2_BUCKET:string}
@@ -6,7 +7,7 @@ export class IngestionStorage{
  readonly client:S3Client;
  constructor(readonly env:StorageEnv){
   if(env.R2_ACCOUNT_ID!=='531521b13c35aabe7b97954af0e2169b'||env.R2_BUCKET!=='conduit-ingestion-staging')throw new Error('ENVIRONMENT_MISMATCH');
-  this.client=new S3Client({region:'auto',forcePathStyle:true,endpoint:`https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,credentials:{accessKeyId:env.R2_ACCESS_KEY_ID,secretAccessKey:env.R2_SECRET_ACCESS_KEY},requestChecksumCalculation:'WHEN_REQUIRED',responseChecksumValidation:'WHEN_REQUIRED',maxAttempts:3});
+  this.client=new S3Client({region:'auto',defaultsMode:'standard',streamCollector,requestHandler:new FetchHttpHandler({requestTimeout:30000}),forcePathStyle:true,endpoint:`https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,credentials:{accessKeyId:env.R2_ACCESS_KEY_ID,secretAccessKey:env.R2_SECRET_ACCESS_KEY},requestChecksumCalculation:'WHEN_REQUIRED',responseChecksumValidation:'WHEN_REQUIRED',maxAttempts:3});
   this.client.middlewareStack.add((next,context)=>async args=>{
    const result=await next(args);
    // Presigning performs no network call and has no response metadata.

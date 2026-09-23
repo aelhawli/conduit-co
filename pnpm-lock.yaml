@@ -17,6 +17,9 @@ importers:
       '@cloudflare/containers':
         specifier: 0.3.7
         version: 0.3.7
+      '@smithy/fetch-http-handler':
+        specifier: 5.8.0
+        version: 5.8.0
       '@supabase/supabase-js':
         specifier: 2.117.1
         version: 2.117.1
