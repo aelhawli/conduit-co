@@ -61,3 +61,16 @@ test('denied tender is hidden with a clear access message',async({page})=>{
  });
  await page.reload();await expect(page.locator('#message')).toContainText('You do not have access');await expect(page.locator('#tender')).toBeHidden();
 });
+
+test('late project refresh cannot reopen a deleted tender',async({page})=>{
+ await setup(page);await expect(page.locator('#tender')).toBeVisible();let started=false;let release!:()=>void;const pending=new Promise<void>(resolve=>{release=resolve;});
+ await page.route('https://conduit-ingestion-staging.letstalk-531.workers.dev/control',async r=>{
+  if(r.request().postDataJSON().action==='project'){started=true;await pending;await r.fulfill({json:{name:'Old tender',reserved_bytes:0,documents:[]}});}else await r.fallback();
+ });
+ const responsePromise=page.waitForResponse(r=>r.url().endsWith('/control')&&r.request().postDataJSON().action==='project');
+ await page.getByRole('button',{name:'Synthetic tender',exact:true}).click();await expect.poll(()=>started).toBe(true);
+ page.once('dialog',dialog=>dialog.accept());await page.locator('#delete-project').click();
+ await expect(page.locator('#message')).toContainText('Tender deleted.');release();await (await responsePromise).finished();
+ await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+ await expect(page.locator('#tender')).toBeHidden();await expect(page.locator('#message')).toContainText('Tender deleted.');
+});
