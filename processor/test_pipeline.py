@@ -1,5 +1,7 @@
 """Synthetic-only native parser checks; no customer files or network calls."""
 import hashlib
+import io
+from PIL import Image, ImageChops
 from pathlib import Path
 import tempfile
 import unittest
@@ -22,6 +24,19 @@ def fixture(path, pages=2, text=True, encryption=None, dimensions=(595, 842)):
 
 
 class ProcessorTests(unittest.TestCase):
+    def test_greyscale_reference_is_pixel_identical_without_rgb_overhead(self):
+        image = Image.effect_noise((1200, 1200), 3).convert('RGB')
+        encoded = pipeline.encode_reference(image)
+        with Image.open(io.BytesIO(encoded)) as restored:
+            self.assertEqual(restored.mode, 'L')
+            self.assertEqual(restored.size, image.size)
+            self.assertIsNone(ImageChops.difference(restored.convert('RGB'), image).getbbox())
+
+    def test_colour_reference_keeps_colour(self):
+        image = Image.new('RGB', (50, 50), (255, 40, 90))
+        with Image.open(io.BytesIO(pipeline.encode_reference(image))) as restored:
+            self.assertEqual(restored.getpixel((0, 0)), (255, 40, 90))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.path = Path(self.temp.name) / 'synthetic.pdf'

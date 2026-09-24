@@ -125,6 +125,14 @@ export async function processVersion(env:IngestionEnv,versionId:string){
  const job=await db.rpc<Job|null>('claim',{version_id:versionId});if(!job)return;
  try{
   const response=await env.PDF_PROCESSOR.getByName('bounded-staging-processor').fetch(new Request('http://processor/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version_id:versionId,lease_token:job.lease_token,expected_bytes:job.source.declared_bytes,source_url:await store.download(job.source,900),callback_url:STAGING_API+'/processor/callback',callback_token:await callbackToken(env,versionId,job.lease_token)}),signal:AbortSignal.timeout(660000)}));
+  // Only bounded numeric operational data crosses into logs; no PDF text, URLs or credentials.
+  try{
+   const raw:unknown=await response.json();const metrics:Record<string,number>={};
+   if(raw&&typeof raw==='object')for(const key of ['checksum_ms','download_ms','validation_ms','page_count','preparation_ms','peak_rss_kib','cpu_ms']){
+    const value=(raw as Record<string,unknown>)[key];if(typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<1e12)metrics[key]=value;
+   }
+   console.info(JSON.stringify({event:'ingestion_processing_metrics',versionId,status:response.status,...metrics}));
+  }catch{/* Missing telemetry must never retry a completed job. */}
   if(!response.ok)throw new Error('PROCESSOR_UNAVAILABLE');
  }catch{
   try{await db.rpc('failed',{version_id:versionId,lease_token:job.lease_token,error_code:'PROCESSOR_UNAVAILABLE',retryable:true});}catch{/* completed/cancelled or fenced; reconciliation handles stale leases */}

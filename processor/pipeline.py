@@ -8,7 +8,9 @@ import os
 import ssl
 from pathlib import Path
 import sys
+import time
 import urllib.request
+from PIL import ImageChops
 from urllib.parse import urlparse
 
 import pikepdf
@@ -18,6 +20,29 @@ FILE_LIMIT = 250_000_000
 PAGE_LIMIT = 2000
 R2_HOST = '531521b13c35aabe7b97954af0e2169b.r2.cloudflarestorage.com'
 CALLBACK = 'https://conduit-ingestion-staging.letstalk-531.workers.dev/processor/callback'
+METRICS = {}
+
+
+def encode_reference(image):
+    """Collapse identical RGB channels losslessly; keep colour and resolution."""
+    candidate = image
+    if image.mode == 'RGB':
+        red, green, blue = image.split()
+        try:
+            if ImageChops.difference(red, green).getbbox() is None and ImageChops.difference(red, blue).getbbox() is None:
+                candidate = red.copy()
+        finally:
+            red.close(); green.close(); blue.close()
+    try:
+        with io.BytesIO() as output:
+            candidate.save(output, format='PNG', optimize=True)
+            encoded = output.getvalue()
+        if len(encoded) > 2_000_000:
+            raise Rejected('OUTPUT_LIMIT')
+        return encoded
+    finally:
+        if candidate is not image:
+            candidate.close()
 
 
 class Rejected(Exception):
@@ -63,7 +88,9 @@ def download(config, target):
             size += len(chunk)
             if size > expected:
                 raise Rejected('SIZE_MISMATCH')
+            started = time.perf_counter()
             digest.update(chunk)
+            METRICS['checksum_ms'] = METRICS.get('checksum_ms', 0) + (time.perf_counter()-started)*1000
             output.write(chunk)
     if size != expected:
         raise Rejected('SIZE_MISMATCH')
@@ -113,13 +140,10 @@ def prepare(path, emit):
                     bitmap = page.render(scale=scale)
                     try:
                         image = bitmap.to_pil()
-                        with io.BytesIO() as output:
-                            image.save(output, format='PNG')
-                            encoded = output.getvalue()
-                            if len(encoded) > 2_000_000:
-                                raise Rejected('OUTPUT_LIMIT')
-                            data['image_base64'] = base64.b64encode(encoded).decode()
-                        image.close()
+                        try:
+                            data['image_base64'] = base64.b64encode(encode_reference(image)).decode()
+                        finally:
+                            image.close()
                     finally:
                         bitmap.close()
                 emit(data)
@@ -129,10 +153,17 @@ def prepare(path, emit):
 
 def run(config, directory):
     path = Path(directory) / 'source.pdf'
+    started = time.perf_counter()
     digest = download(config, path)
+    METRICS['download_ms'] = (time.perf_counter()-started)*1000
+    started = time.perf_counter()
     count = validate(path, config['expected_bytes'])
+    METRICS['validation_ms'] = (time.perf_counter()-started)*1000
+    METRICS['page_count'] = count
     callback(config, 'validated', {'page_count': count, 'sha256': digest})
+    started = time.perf_counter()
     prepare(path, lambda page: callback(config, 'page', page))
+    METRICS['preparation_ms'] = (time.perf_counter()-started)*1000
     callback(config, 'completed', {})
 
 
@@ -155,3 +186,9 @@ if __name__ == '__main__':
     except Exception:
         # Do not print PDF parser strings, paths, document contents or URLs.
         sys.exit(2)
+    finally:
+        if sys.platform == 'linux':
+            usage = resource.getrusage(resource.RUSAGE_SELF)
+            METRICS['peak_rss_kib'] = usage.ru_maxrss
+            METRICS['cpu_ms'] = (usage.ru_utime + usage.ru_stime)*1000
+        print(json.dumps({key: round(value, 3) for key, value in METRICS.items()}), flush=True)
